@@ -1,0 +1,46 @@
+import 'package:chatfrontend/presentation/providers/tokenprovider.dart';
+import 'package:chatfrontend/presentation/screens/chatscreen.dart';
+import 'package:chatfrontend/presentation/screens/welcome.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:chatfrontend/constants.dart' as constColor;
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  //debugPaintSizeEnabled=true;
+  runApp(ProviderScope(child: ChatApp()));
+}
+
+class ChatApp extends ConsumerWidget {
+  const ChatApp({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tokenState = ref.watch(tokenProvider);
+
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(textTheme: GoogleFonts.pressStart2pTextTheme()),
+      home: tokenState.when(
+        data: (token) {
+          final auth = ref.read(tokenProvider.notifier);
+          if (auth.token == ''){
+            print("TOKEN UNASSIGNED");
+          }
+          return auth.isAuthenticated ? const Chatscreen() : Welcome();
+        },
+        error: (error, stackTrace) {
+          return const Welcome();
+        },
+        loading: () {
+          return const Scaffold(
+            backgroundColor: constColor.blackcolor,
+            body: Center(child: CircularProgressIndicator(color: constColor.magentacolor,)),
+          );
+        },
+      ),
+    );
+  }
+}

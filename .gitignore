@@ -1,0 +1,56 @@
+# =====================
+# General
+# =====================
+.env
+*.log
+.DS_Store
+Thumbs.db
+
+# =====================
+# IDE / Eclipse / Spring Tool Suite / IntelliJ / VSCode
+# =====================
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# =====================
+# Java / Spring Boot
+# =====================
+target/
+build/
+out/
+.gradle/
+*.jar
+*.class
+
+# =====================
+# Flutter / Dart
+# =====================
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+build/
+*.lock
+
+# =====================
+# Docker / Configs
+# =====================
+**/.env
+docker-compose.override.yml
+
+# =====================
+# Runtime / User data
+# =====================
+bin/
+photos/
+
+# =====================
+# OS / Other
+# =====================
+.DS_Store
+Thumbs.db
+

@@ -1,0 +1,5 @@
+enum LoginResult{
+  FAILED,
+  SUCCESS,
+  INCOMPLETE_PROFILE
+}
