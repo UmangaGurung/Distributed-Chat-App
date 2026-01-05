@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:chatfrontend/tokenservice.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart' as provider;
 import '../providers/messageprovider.dart';
 import '../providers/socketprovider.dart';
 import 'package:chatfrontend/constants.dart' as constColor;
@@ -14,12 +13,14 @@ import 'package:pixelarticons/pixelarticons.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  //debugPaintSizeEnabled = true;
+  // debugPaintSizeEnabled = true;
   runApp(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(textTheme: GoogleFonts.pressStart2pTextTheme()),
-      home: ChatscreenTest(),
+    ProviderScope(
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(textTheme: GoogleFonts.pressStart2pTextTheme()),
+        home: ChatscreenTest(),
+      ),
     ),
   );
 }
@@ -54,6 +55,7 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
     // final participantDetails = widget.conversation.participantDetailsDTO;
 
     return Scaffold(
+      backgroundColor: constColor.blackcolor,
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
         backgroundColor: constColor.blackcolor,
@@ -67,7 +69,7 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
         titleSpacing: 0,
         title: const Text(
           "CONVERSATION NAME",
-          style: TextStyle(color: constColor.cyancolor, fontSize: 12),
+          style: TextStyle(color: constColor.cyancolor, fontSize: 14),
           textAlign: TextAlign.left,
         ),
         actions: [
@@ -87,34 +89,60 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
                 reverse: true,
                 itemCount: 30,
                 itemBuilder: (context, index) {
-                  return ListTile(title: Text("Message ${index}"));
+                  return ListTile(title: Text("Message ${index}", style: TextStyle(color: constColor.magentacolor),));
                 },
               ),
             ),
-            Container(
+            Padding(
+              padding: const EdgeInsets.only(top: 6, bottom: 6),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  IconButton(onPressed: () {}, icon: Icon(Pixel.camera)),
-                  IconButton(onPressed: () {}, icon: Icon(Pixel.imagegallery)),
-                   Container(
-                      height: 35,
-                      width: 90,
-                      padding: EdgeInsets.all(7),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: constColor.magentacolor
-                          )
-                        ),
-                        child: TextField(
-                          decoration: InputDecoration(
-                            border: InputBorder.none
-                          ),
-                          keyboardType: TextInputType.multiline,
-                        ),
+                  SizedBox(width: 6),
+                  IconButton(
+                    onPressed: () {},
+                    padding: EdgeInsets.zero,
+                    iconSize: 38,
+                    color: constColor.cyancolor,
+                    icon: Icon(Pixel.camera),
                   ),
-                  IconButton(onPressed: () {}, icon: Icon(Pixel.arrowbarright))
+                  SizedBox(width: 6),
+                  IconButton(
+                    onPressed: () {},
+                    padding: EdgeInsets.zero,
+                    iconSize: 38,
+                    color: constColor.cyancolor,
+                    icon: Icon(Pixel.imagegallery),
+                  ),
+                  SizedBox(width: 6),
+                  Expanded(child: TextField(
+                    decoration: InputDecoration(
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: constColor.magentacolor
+                        )
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                              color: constColor.magentacolor,
+                            width: 2
+                          )
+                      )
+                    ),
+                  )),
+                  IconButton(
+                    onPressed: () {},
+                    padding: EdgeInsets.zero,
+                    iconSize: 38,
+                    color: constColor.cyancolor,
+                    icon: Icon(Pixel.arrowbarright),
+                  ),
                 ],
               ),
             ),
