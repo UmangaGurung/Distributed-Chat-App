@@ -20,11 +20,10 @@ class MessageResponseDTO {
   });
 
   factory MessageResponseDTO.fromJson(Map<String, dynamic> jsonData) {
-    print("Inside MessageRespose 1 ${jsonData['createdAt']}");
+
     final date= DateTime.parse(jsonData['createdAt']);
-    print("Inside MessageRespose 2 ${date}");
     String time= DateFormat('HH:mm').format(date);
-    print("Inside MessageRespose 3 ${time}");
+
     return MessageResponseDTO(
       conversationId: jsonData['conversationId'],
       messageId: jsonData['messageId'],

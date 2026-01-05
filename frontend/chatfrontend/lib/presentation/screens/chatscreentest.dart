@@ -1,8 +1,13 @@
 import 'dart:math';
 
+import 'package:chatfrontend/cache/model/userdetailscache.dart';
+import 'package:chatfrontend/cache/service/hivemessageservice.dart';
+import 'package:chatfrontend/cache/service/hiveuserservice.dart';
 import 'package:chatfrontend/conversationservice.dart';
 import 'package:chatfrontend/dto/conversation/conversation&userdetailsdto.dart';
+import 'package:chatfrontend/dto/conversation/participantdetails.dart';
 import 'package:chatfrontend/dto/message/messagedetailsdto.dart';
+import 'package:chatfrontend/dto/message/messageresponsedto.dart';
 import 'package:chatfrontend/presentation/providers/chatmessagestate.dart';
 import 'package:chatfrontend/presentation/providers/tokenprovider.dart';
 import 'package:chatfrontend/presentation/screens/chat/chatbubble.dart';
@@ -29,6 +34,10 @@ class ChatscreenTest extends ConsumerStatefulWidget {
 class _ChatscreenState extends ConsumerState<ChatscreenTest> {
   late final ChatMessageState chatMessageState;
   final ConversationAPIService conversationAPIService= ConversationAPIService();
+
+  final HiveMessageService hiveMessageService= HiveMessageService();
+  final HiveUserService hiveUserService= HiveUserService();
+
   List<MessageDetailsDTO> messageList= [];
 
   final messageField = TextEditingController();
@@ -36,6 +45,7 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
   late TokenService tokenService;
   late String userId;
 
+  late final response;
   bool isLoading = true;
 
   @override
@@ -49,6 +59,8 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
   }
 
   Future<void> _getMessages() async {
+    final conversationId= widget.conversation.conversationResponseDTO.conversationID;
+
     if (!tokenService.isAuthenticated) {
       if (!mounted) {
         return;
@@ -58,10 +70,48 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
     }
 
     final token = tokenService.token;
-    final response = await conversationAPIService.getConversationMessages(
-        token,
-        widget.conversation.conversationResponseDTO.conversationID
-    );
+
+    List<MessageResponseDTO> cachedMessages= [];
+    if (!await hiveMessageService.isExpired(conversationId)){
+      print("Loading messages from hive");
+      cachedMessages= hiveMessageService.getMessages(
+          conversationId,
+          0
+      );
+      final userIdList= widget.conversation.conversationResponseDTO.participantId;
+      final cachedUserDetails= hiveUserService.getAllCachedUserDetails(
+        userIdList
+      );
+
+      response = cachedMessages.map((message) {
+        final participantDetails = cachedUserDetails[message.senderId];
+        if (participantDetails == null) return null;
+        return MessageDetailsDTO(
+          messageResponseDTO: message,
+          userDetailsDTO: participantDetails,
+        );
+      }).whereType<MessageDetailsDTO>().toList();
+    }
+
+    if (cachedMessages.isEmpty){
+      if (await hiveMessageService.isExpired(conversationId)){
+        print("Cached has expired as well");
+      }
+      print("Loading messages from API");
+      List<MessageDetailsDTO> apiResponse = await conversationAPIService.getConversationMessages(
+          token,
+          widget.conversation.conversationResponseDTO.conversationID
+      );
+
+      response= apiResponse;
+
+      final messageDetailsList= apiResponse.map((m) => m.messageResponseDTO).toList();
+      final userDetailsList= apiResponse.map((u) => u.userDetailsDTO).toList();
+
+      await hiveMessageService.addMessagesToHive(messageDetailsList, conversationId);
+      await hiveUserService.addListOfUserDetailsToCache(userDetailsList);
+      await hiveMessageService.setExpirationTime(conversationId);
+    }
 
     print(response);
     if (!mounted) {

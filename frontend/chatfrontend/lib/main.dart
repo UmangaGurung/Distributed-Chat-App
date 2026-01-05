@@ -1,3 +1,5 @@
+import 'package:chatfrontend/cache/model/messagecache.dart';
+import 'package:chatfrontend/cache/model/userdetailscache.dart';
 import 'package:chatfrontend/presentation/providers/tokenprovider.dart';
 import 'package:chatfrontend/presentation/screens/chatscreen.dart';
 import 'package:chatfrontend/presentation/screens/welcome.dart';
@@ -6,10 +8,18 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:chatfrontend/constants.dart' as constColor;
+import 'package:hive_flutter/hive_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   //debugPaintSizeEnabled=true;
+  await Hive.initFlutter();
+  Hive.registerAdapter(HiveMessageModelAdapter());
+  Hive.registerAdapter(HiveUserModelAdapter());
+  await Hive.openBox<HiveMessageModel>('messages');
+  await Hive.openBox<List<String>>('conversationIndex');
+  await Hive.openBox<HiveUserModel>('user');
+  await Hive.openBox<DateTime>('dataTTL');
   runApp(ProviderScope(child: ChatApp()));
 }
 
