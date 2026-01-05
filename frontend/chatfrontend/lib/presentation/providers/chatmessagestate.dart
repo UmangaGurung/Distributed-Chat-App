@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../dto/conversation/messagedetailsdto.dart';
+import '../../dto/message/messagedetailsdto.dart';
 
 class ChatMessageState extends Notifier<Map<String, List<MessageDetailsDTO>>> {
   @override

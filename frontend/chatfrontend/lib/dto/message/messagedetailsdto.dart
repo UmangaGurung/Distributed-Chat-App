@@ -1,5 +1,5 @@
 
-import 'package:chatfrontend/dto/conversation/messageresponsedto.dart';
+import 'package:chatfrontend/dto/message/messageresponsedto.dart';
 import 'package:chatfrontend/dto/conversation/participantdetails.dart';
 
 class MessageDetailsDTO{

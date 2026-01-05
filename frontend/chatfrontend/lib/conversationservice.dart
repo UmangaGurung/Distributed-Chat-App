@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:chatfrontend/dto/conversation/conversation&userdetailsdto.dart';
-import 'package:chatfrontend/dto/conversation/messagedetailsdto.dart';
-import 'package:chatfrontend/dto/conversation/messageresponsedto.dart';
+import 'package:chatfrontend/dto/message/messagedetailsdto.dart';
+import 'package:chatfrontend/dto/message/messageresponsedto.dart';
 import 'package:chatfrontend/dto/conversation/participantdetails.dart';
 
 import 'dto/conversation/conversationresponsedto.dart';
@@ -53,7 +53,7 @@ class ConversationAPIService {
   ) async {
     try {
       final url = Uri.parse(
-        conversationUrl + "/conversations/${conversationId}/messages",
+        conversationUrl + "/${conversationId}/messages",
       );
 
       final response = await http.get(
@@ -67,6 +67,7 @@ class ConversationAPIService {
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         final List<MessageDetailsDTO> messageDetailsList = [];
+        print(data);
 
         data.forEach((message) {
           MessageDetailsDTO messageDetailsDTO = MessageDetailsDTO(
@@ -80,6 +81,8 @@ class ConversationAPIService {
 
           messageDetailsList.add(messageDetailsDTO);
         });
+
+        return messageDetailsList;
       }
       return [];
     } catch (e) {

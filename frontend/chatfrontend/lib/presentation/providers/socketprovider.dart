@@ -1,4 +1,4 @@
-import 'package:chatfrontend/dto/conversation/messagedetailsdto.dart';
+import 'package:chatfrontend/dto/message/messagedetailsdto.dart';
 import 'package:chatfrontend/presentation/providers/chatmessagestate.dart';
 import 'package:chatfrontend/presentation/providers/tokenprovider.dart';
 import 'package:chatfrontend/socketservice.dart';

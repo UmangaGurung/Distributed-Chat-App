@@ -137,13 +137,13 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
 
                 return InkWell(
                   onTap: () {
-                    // Navigator.push(
-                    //   context,
-                    //   MaterialPageRoute(
-                    //     builder: (context) =>
-                    //         ChatscreenTest(conversation: conversation),
-                    //   ),
-                    // );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            ChatscreenTest(conversation: conversation),
+                      ),
+                    );
                   },
                   child: Container(
                     margin: const EdgeInsets.only(top: 5, bottom: 5),

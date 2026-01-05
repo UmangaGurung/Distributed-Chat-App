@@ -1,6 +1,6 @@
 import 'dart:convert';
-import 'package:chatfrontend/dto/conversation/messagedetailsdto.dart';
-import 'package:chatfrontend/dto/conversation/messageresponsedto.dart';
+import 'package:chatfrontend/dto/message/messagedetailsdto.dart';
+import 'package:chatfrontend/dto/message/messageresponsedto.dart';
 import 'package:chatfrontend/dto/conversation/participantdetails.dart';
 import 'package:chatfrontend/presentation/providers/chatmessagestate.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
