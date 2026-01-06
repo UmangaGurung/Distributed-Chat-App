@@ -1,3 +1,4 @@
+import 'package:chatfrontend/cache/service/hivemessageservice.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../dto/message/messagedetailsdto.dart';
@@ -9,14 +10,16 @@ class ChatMessageState extends Notifier<Map<String, List<MessageDetailsDTO>>> {
     return {};
   }
 
-  void addNewMessages(MessageDetailsDTO message) {
+  // HiveMessageService _hiveMessageService= HiveMessageService();
+
+ void addNewMessages(MessageDetailsDTO message){
     final convoId = message.messageResponseDTO.conversationId;
 
     final existingMessages = state[convoId] ?? const [];
 
     state = {
       ...state,
-      convoId: [...existingMessages, message],
+      convoId: [message, ...existingMessages],
     };
   }
 
@@ -26,5 +29,4 @@ class ChatMessageState extends Notifier<Map<String, List<MessageDetailsDTO>>> {
       convoId: [],
     };
   }
-  //add a addbatch method also
 }

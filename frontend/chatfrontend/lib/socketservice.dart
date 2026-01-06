@@ -61,14 +61,6 @@ class SocketService {
     isSubscribed = true;
   }
 
-  void callbackTypingEvent(StompFrame frame){
-    print("Received on topic: ${frame.headers}");
-
-    final body= frame.body;
-
-    print(body);
-  }
-
   void callback(StompFrame frame) {
     print("Received on topic: ${frame.headers}");
 
@@ -92,7 +84,7 @@ class SocketService {
 
   void sendMessage(String message) {
     final messageData = {
-      'conversationId': '4e0d5c2e-d112-476a-9deb-2af06417559b',
+      'conversationId': '47a33f67-8382-4de5-89b7-49ccbf50eedc',
       'message': message,
       'type': 'TEXT',
     };
@@ -113,6 +105,14 @@ class SocketService {
         destination: '/app/chat.typingEvent',
         body: jsonEncode(info)
     );
+  }
+
+  void callbackTypingEvent(StompFrame frame){
+    print("Received on topic: ${frame.headers}");
+
+    final body= frame.body;
+
+    print(body);
   }
 
   void disconnectConnection() {

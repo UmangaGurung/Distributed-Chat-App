@@ -17,7 +17,6 @@ import 'package:chatfrontend/tokenservice.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../tokenutil.dart';
-import '../providers/messageprovider.dart';
 import '../providers/socketprovider.dart';
 
 import 'package:pixelarticons/pixelarticons.dart';
@@ -33,12 +32,13 @@ class ChatscreenTest extends ConsumerStatefulWidget {
 
 class _ChatscreenState extends ConsumerState<ChatscreenTest> {
   late final ChatMessageState chatMessageState;
-  final ConversationAPIService conversationAPIService= ConversationAPIService();
+  final ConversationAPIService conversationAPIService =
+      ConversationAPIService();
 
-  final HiveMessageService hiveMessageService= HiveMessageService();
-  final HiveUserService hiveUserService= HiveUserService();
+  final HiveMessageService hiveMessageService = HiveMessageService();
+  final HiveUserService hiveUserService = HiveUserService();
 
-  List<MessageDetailsDTO> messageList= [];
+  List<MessageDetailsDTO> messageList = [];
 
   final messageField = TextEditingController();
 
@@ -53,13 +53,14 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
     // TODO: implement initState
     super.initState();
     tokenService = ref.read(tokenProvider.notifier);
-    final token= tokenService.tokenDecode();
-    userId= token['sub'];
+    final token = tokenService.tokenDecode();
+    userId = token['sub'];
     _getMessages();
   }
 
   Future<void> _getMessages() async {
-    final conversationId= widget.conversation.conversationResponseDTO.conversationID;
+    final conversationId =
+        widget.conversation.conversationResponseDTO.conversationID;
 
     if (!tokenService.isAuthenticated) {
       if (!mounted) {
@@ -71,44 +72,51 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
 
     final token = tokenService.token;
 
-    List<MessageResponseDTO> cachedMessages= [];
-    if (!await hiveMessageService.isExpired(conversationId)){
+    List<MessageResponseDTO> cachedMessages = [];
+    if (!await hiveMessageService.isExpired(conversationId)) {
       print("Loading messages from hive");
-      cachedMessages= hiveMessageService.getMessages(
-          conversationId,
-          0
-      );
-      final userIdList= widget.conversation.conversationResponseDTO.participantId;
-      final cachedUserDetails= hiveUserService.getAllCachedUserDetails(
-        userIdList
+      cachedMessages = hiveMessageService.getMessages(conversationId, 0);
+      final userIdList =
+          widget.conversation.conversationResponseDTO.participantId;
+      final cachedUserDetails = hiveUserService.getAllCachedUserDetails(
+        userIdList,
       );
 
-      response = cachedMessages.map((message) {
-        final participantDetails = cachedUserDetails[message.senderId];
-        if (participantDetails == null) return null;
-        return MessageDetailsDTO(
-          messageResponseDTO: message,
-          userDetailsDTO: participantDetails,
-        );
-      }).whereType<MessageDetailsDTO>().toList();
+      response = cachedMessages
+          .map((message) {
+            final participantDetails = cachedUserDetails[message.senderId];
+            if (participantDetails == null) return null;
+            return MessageDetailsDTO(
+              messageResponseDTO: message,
+              userDetailsDTO: participantDetails,
+            );
+          })
+          .whereType<MessageDetailsDTO>()
+          .toList();
     }
 
-    if (cachedMessages.isEmpty){
-      if (await hiveMessageService.isExpired(conversationId)){
+    if (cachedMessages.isEmpty) {
+      if (await hiveMessageService.isExpired(conversationId)) {
         print("Cached has expired as well");
       }
       print("Loading messages from API");
-      List<MessageDetailsDTO> apiResponse = await conversationAPIService.getConversationMessages(
-          token,
-          widget.conversation.conversationResponseDTO.conversationID
+      List<MessageDetailsDTO> apiResponse = await conversationAPIService
+          .getConversationMessages(
+            token,
+            widget.conversation.conversationResponseDTO.conversationID,
+          );
+
+      response = apiResponse;
+
+      final messageDetailsList = apiResponse
+          .map((m) => m.messageResponseDTO)
+          .toList();
+      final userDetailsList = apiResponse.map((u) => u.userDetailsDTO).toList();
+
+      await hiveMessageService.addMessagesToHive(
+        messageDetailsList,
+        conversationId,
       );
-
-      response= apiResponse;
-
-      final messageDetailsList= apiResponse.map((m) => m.messageResponseDTO).toList();
-      final userDetailsList= apiResponse.map((u) => u.userDetailsDTO).toList();
-
-      await hiveMessageService.addMessagesToHive(messageDetailsList, conversationId);
       await hiveUserService.addListOfUserDetailsToCache(userDetailsList);
       await hiveMessageService.setExpirationTime(conversationId);
     }
@@ -119,8 +127,8 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
     }
 
     setState(() {
-      messageList= response;
-      isLoading= false;
+      messageList = response;
+      isLoading = false;
     });
   }
 
@@ -132,18 +140,36 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) {;
     final convoDetails = widget.conversation.conversationResponseDTO;
     final participantDetails = widget.conversation.participantDetailsDTO;
+
+    final messageProviderState = ref.watch(messageProvider);
+
+    final latestMessageState =
+        messageProviderState[convoDetails.conversationID] ?? [];
 
     if (isLoading) {
       return const Scaffold(
         backgroundColor: constColor.blackcolor,
-        body: Center(child: CircularProgressIndicator(color: constColor.magentacolor)),
+        body: Center(
+          child: CircularProgressIndicator(color: constColor.magentacolor),
+        ),
       );
     }
 
-    print("THis is inside the chat + ${messageList}");
+    print("Length of old ${messageList.length}");
+    print("Length of new ${latestMessageState.length}");
+
+    List<MessageDetailsDTO> allMessages= [
+      ...latestMessageState,
+      ...messageList,
+    ];
+
+    print("Length of all ${allMessages.length}");
+    print("IDs in messageList: ${messageList.map((m) => m.messageResponseDTO.messageId)}");
+    print("IDs in latestMessageState: ${latestMessageState.map((m) => m.messageResponseDTO.messageId)}");
+
     return Scaffold(
       backgroundColor: constColor.blackcolor,
       resizeToAvoidBottomInset: true,
@@ -165,9 +191,7 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
         actions: [
           IconButton(
             onPressed: () {
-              setState(() {
-
-              });
+              setState(() {});
             },
             icon: const Icon(Pixel.morevertical),
             color: constColor.magentacolor,
@@ -181,13 +205,14 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
             Expanded(
               child: ListView.builder(
                 reverse: true,
-                itemCount: messageList.length,
+                itemCount: allMessages.length,
                 itemBuilder: (context, index) {
-                  final message= messageList[index];
+                  final message = allMessages[index];
                   return MessageBubble(
+                    key: ValueKey(message.messageResponseDTO.messageId),
                     messageResponseDTO: message.messageResponseDTO,
                     senderDetailsDTO: message.userDetailsDTO,
-                    userId: userId
+                    userId: userId,
                   );
                 },
               ),
@@ -243,7 +268,7 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
                   ),
                   IconButton(
                     onPressed: () {
-
+                      print(widget.conversation.conversationResponseDTO.conversationID);
                     },
                     padding: EdgeInsets.zero,
                     iconSize: 38,

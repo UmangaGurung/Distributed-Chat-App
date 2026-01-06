@@ -36,6 +36,27 @@ class HiveMessageService {
     print("Messages added to Hive");
   }
 
+  Future<void> addMessageToHive(
+      MessageResponseDTO messageResponse,
+      String conversationId) async{
+
+    final messageIdList= indexBox.get(conversationId, defaultValue: <String>[]);
+
+    HiveMessageModel messageModel= HiveMessageModel(
+        conversationId: conversationId,
+        messageId: messageResponse.messageId,
+        message: messageResponse.message,
+        messageType: messageResponse.messageType,
+        createdAt: messageResponse.createdAt,
+        senderId: messageResponse.senderId
+    );
+
+    messageIdList?.add(messageResponse.messageId);
+
+    await box.put(messageResponse.messageId, messageModel);
+    await indexBox.put(conversationId, messageIdList!);
+  }
+
   List<MessageResponseDTO> getMessages(String conversationId, int limitIndex) {
     final messageIdList = indexBox.get(conversationId);
 
