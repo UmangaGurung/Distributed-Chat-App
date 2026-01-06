@@ -1,5 +1,6 @@
 package com.distributedchat.chatservice.config;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -12,6 +13,8 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
 
 import com.distributedchat.chatservice.component.JWTService;
 import com.distributedchat.chatservice.component.redis.RedisTokenBlackList;
+
+import io.jsonwebtoken.Claims;
 
 public class HandShakeInterceptor implements HandshakeInterceptor {
 	
@@ -33,7 +36,9 @@ public class HandShakeInterceptor implements HandshakeInterceptor {
 		if (token != null) {
             System.out.println("Received token: " + token);
             
-            String tokenId= jwtService.extractClaims(token).getId(); 
+            Claims claims= jwtService.extractClaims(token); 
+            
+            String tokenId= claims.getId();
             
             if (blackList.isTokenBlackListed(tokenId)) {
             	response.setStatusCode(HttpStatus.UNAUTHORIZED);
@@ -45,10 +50,12 @@ public class HandShakeInterceptor implements HandshakeInterceptor {
             	return false;
             }           
             
-            String userId= jwtService.getUserId(token);
-            System.out.println(jwtService.extractClaims(token).getId());
+            String userId= claims.getSubject();
+            Date jwtExp= claims.getExpiration();
             
             attributes.put("userId", userId);
+            attributes.put("exp", jwtExp.getTime());
+            attributes.put("tokenId", tokenId);
         } else {
             System.out.println("No token received");
             attributes.put("userId", null);
