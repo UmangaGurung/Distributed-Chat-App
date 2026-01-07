@@ -13,12 +13,17 @@ class HiveMessageService {
   ) async {
     Map<String, HiveMessageModel> hiveMessageMap = {};
 
-    List<String>? messageIdList = indexBox.get(
+    List<String> messageIdList = indexBox.get(
       conversationId,
       defaultValue: <String>[],
-    );
+    ) ?? [];
 
     for (MessageResponseDTO message in messageList) {
+
+      if (messageIdList.contains(message.messageId)){
+        continue;
+      }
+
       HiveMessageModel hiveMessage = HiveMessageModel(
         conversationId: message.conversationId,
         messageId: message.messageId,
@@ -28,10 +33,10 @@ class HiveMessageService {
         senderId: message.senderId,
       );
       hiveMessageMap[message.messageId] = hiveMessage;
-      messageIdList!.insert(0, message.messageId);
+      messageIdList.insert(0, message.messageId);
     }
     await box.putAll(hiveMessageMap);
-    await indexBox.put(conversationId, messageIdList!);
+    await indexBox.put(conversationId, messageIdList);
 
     print("Messages added to Hive");
   }

@@ -178,8 +178,15 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
 
     addLatestMessagesToHive(latestMessageState, convoDetails.conversationID);
 
+    Set<String> messageIds= messageList.map(
+        (m) => m.messageResponseDTO.messageId).toSet();
+
+    List<MessageDetailsDTO> deduplicatedState= latestMessageState.where((ms) {
+        return !messageIds.contains(ms.messageResponseDTO.messageId);
+    }).toList();
+
     List<MessageDetailsDTO> allMessages = [
-      ...latestMessageState,
+      ...deduplicatedState,
       ...messageList,
     ];
 
