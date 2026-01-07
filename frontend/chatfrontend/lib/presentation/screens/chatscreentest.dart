@@ -22,6 +22,8 @@ import '../providers/socketprovider.dart';
 import 'package:pixelarticons/pixelarticons.dart';
 import 'package:chatfrontend/constants.dart' as constColor;
 
+import 'editchatscreen.dart';
+
 class ChatscreenTest extends ConsumerStatefulWidget {
   final ConversationAndUserDetailsDTO conversation;
   const ChatscreenTest({required this.conversation, super.key});
@@ -45,7 +47,7 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
   late TokenService tokenService;
   late String userId;
 
-  late final response;
+  // late final response;
   bool isLoading = true;
 
   @override
@@ -59,6 +61,8 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
   }
 
   Future<void> _getMessages() async {
+    List<MessageDetailsDTO> response = [];
+
     final conversationId =
         widget.conversation.conversationResponseDTO.conversationID;
 
@@ -132,6 +136,20 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
     });
   }
 
+  Future<void> addLatestMessagesToHive(
+      List<MessageDetailsDTO> messageDetails,
+      String conversationId)
+  async{
+    if (messageDetails.length==1){
+      MessageResponseDTO messageResponseDTO= messageDetails.first.messageResponseDTO;
+      await hiveMessageService.addMessageToHive(messageResponseDTO, conversationId);
+    } else if (messageDetails.length>1){
+      List<MessageResponseDTO> messageResponeDTOList= messageDetails.map(
+              (m) => m.messageResponseDTO).toList();
+      await hiveMessageService.addMessagesToHive(messageResponeDTOList, conversationId);
+    }
+  }
+
   @override
   void dispose() {
     // TODO: implement dispose
@@ -140,7 +158,7 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
   }
 
   @override
-  Widget build(BuildContext context) {;
+  Widget build(BuildContext context) {
     final convoDetails = widget.conversation.conversationResponseDTO;
     final participantDetails = widget.conversation.participantDetailsDTO;
 
@@ -158,17 +176,12 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
       );
     }
 
-    print("Length of old ${messageList.length}");
-    print("Length of new ${latestMessageState.length}");
+    addLatestMessagesToHive(latestMessageState, convoDetails.conversationID);
 
-    List<MessageDetailsDTO> allMessages= [
+    List<MessageDetailsDTO> allMessages = [
       ...latestMessageState,
       ...messageList,
     ];
-
-    print("Length of all ${allMessages.length}");
-    print("IDs in messageList: ${messageList.map((m) => m.messageResponseDTO.messageId)}");
-    print("IDs in latestMessageState: ${latestMessageState.map((m) => m.messageResponseDTO.messageId)}");
 
     return Scaffold(
       backgroundColor: constColor.blackcolor,
@@ -177,7 +190,9 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
         backgroundColor: constColor.blackcolor,
         centerTitle: false,
         leading: IconButton(
-          onPressed: () {},
+          onPressed: () {
+            Navigator.pop(context);
+          },
           icon: const Icon(Pixel.chevronleft),
           color: constColor.magentacolor,
           iconSize: 25,
@@ -189,13 +204,36 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
           textAlign: TextAlign.left,
         ),
         actions: [
-          IconButton(
-            onPressed: () {
-              setState(() {});
-            },
+          PopupMenuButton(
             icon: const Icon(Pixel.morevertical),
-            color: constColor.magentacolor,
             iconSize: 25,
+            iconColor: constColor.magentacolor,
+            color: constColor.blackcolor,
+            onSelected: (value) {
+              switch (value) {
+                case 'edit':
+                  Navigator.push(context, MaterialPageRoute(
+                      builder: (context) => EditChatScreen()));
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'edit',
+                child: Text(
+                  'Edit Chat',
+                  style: TextStyle(color: Colors.white, fontSize: 10),
+                ),
+              ),
+              if (convoDetails.type == "GROUP")
+                const PopupMenuItem(
+                  value: 'members',
+                  child: Text(
+                    'Chat Members',
+                    style: TextStyle(color: Colors.white, fontSize: 10),
+                  ),
+                ),
+            ],
           ),
         ],
       ),
@@ -268,7 +306,12 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
                   ),
                   IconButton(
                     onPressed: () {
-                      print(widget.conversation.conversationResponseDTO.conversationID);
+                      print(
+                        widget
+                            .conversation
+                            .conversationResponseDTO
+                            .conversationID,
+                      );
                     },
                     padding: EdgeInsets.zero,
                     iconSize: 38,
