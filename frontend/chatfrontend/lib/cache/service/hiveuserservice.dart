@@ -63,8 +63,8 @@ class HiveUserService {
     return false;
   }
 
-  Future<List<String>> isExpiredBulkCheck(List<String> userIdList) async {
-    List<String> expiredIds = [];
+  Future<Set<String>> isExpiredBulkCheck(List<String> userIdList) async {
+    Set<String> expiredIds = {};
     final DateTime now = DateTime.now();
 
     for (String id in userIdList) {

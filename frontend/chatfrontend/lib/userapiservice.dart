@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:chatfrontend/dto/conversation/participantdetails.dart';
 import 'package:chatfrontend/dto/usersearchresult.dart';
 import 'package:chatfrontend/loginresult.dart';
 import 'package:chatfrontend/registerresponse.dart';
@@ -244,6 +245,10 @@ class UserAPIService {
       print("Request error: $e");
       return false;
     }
+  }
+
+  Future<List<ParticipantDetails>> getUserDetails(Set<String> userIdList) async{
+    return [];
   }
 
   Future<bool> logout(String token) async{
