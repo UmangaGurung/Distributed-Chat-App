@@ -29,7 +29,7 @@ class ChatMessageState extends Notifier<Map<String, List<MessageDetailsDTO>>> {
     return {};
   }
 
-  void addNewMessages(MessageDetailsDTO message) async {
+  void addNewMessages(MessageDetailsDTO message) {
     final conversationId = message.messageResponseDTO.conversationId;
 
     final existingMessages = state[conversationId] ?? const [];

@@ -4,7 +4,7 @@ import 'package:hive/hive.dart';
 
 class HiveMessageService {
   final box = Hive.box<HiveMessageModel>('messages');
-  final indexBox = Hive.box<List<String>>('conversationIndex');
+  final indexBox = Hive.box<Map<String, List<String>>>('conversationIndex');
   final ttlBox= Hive.box<DateTime>('dataTTL');
 
   Future<void> addMessagesToHive(
@@ -13,13 +13,14 @@ class HiveMessageService {
   ) async {
     Map<String, HiveMessageModel> hiveMessageMap = {};
 
-    List<String> messageIdList = indexBox.get(
+    Map<String, List<String>> messageIdMap= indexBox.get(
       conversationId,
-      defaultValue: <String>[],
-    ) ?? [];
+      defaultValue: {},
+    ) ?? {};
+
+    List<String> messageIdList= messageIdMap['api'] ?? [];
 
     for (MessageResponseDTO message in messageList) {
-
       if (messageIdList.contains(message.messageId)){
         continue;
       }
@@ -32,11 +33,14 @@ class HiveMessageService {
         createdAt: message.createdAt,
         senderId: message.senderId,
       );
+
       hiveMessageMap[message.messageId] = hiveMessage;
       messageIdList.insert(0, message.messageId);
     }
+
+    messageIdMap['api']= messageIdList;
     await box.putAll(hiveMessageMap);
-    await indexBox.put(conversationId, messageIdList);
+    await indexBox.put(conversationId, messageIdMap);
 
     print("Messages added to Hive");
   }
@@ -45,7 +49,16 @@ class HiveMessageService {
       MessageResponseDTO messageResponse,
       String conversationId) async{
 
-    final messageIdList= indexBox.get(conversationId, defaultValue: <String>[]);
+    Map<String, List<String>> messageIdMap= indexBox.get(
+      conversationId,
+      defaultValue: {},
+    ) ?? {};
+
+    List<String> messageIdList= messageIdMap['stomp'] ?? [];
+
+    if (messageIdList.contains(messageResponse.messageId)){
+      return;
+    }
 
     HiveMessageModel messageModel= HiveMessageModel(
         conversationId: conversationId,
@@ -56,14 +69,16 @@ class HiveMessageService {
         senderId: messageResponse.senderId
     );
 
-    messageIdList?.add(messageResponse.messageId);
+    messageIdList.add(messageResponse.messageId);
+    messageIdMap['stomp']= messageIdList;
 
     await box.put(messageResponse.messageId, messageModel);
-    await indexBox.put(conversationId, messageIdList!);
+    await indexBox.put(conversationId, messageIdMap);
   }
 
   List<MessageResponseDTO> getMessages(String conversationId, int limitIndex) {
-    final messageIdList = indexBox.get(conversationId);
+    final messageIdMap = indexBox.get(conversationId) ?? {};
+    final messageIdList= messageIdMap['api'];
 
     final messageList = messageIdList!.map((id) => box.get(id)!).toList();
 
@@ -79,35 +94,66 @@ class HiveMessageService {
       );
       messageResponseList.insert(0, messageResponseDTO);
     }
+
     return messageResponseList;
   }
 
   Future<void> setExpirationTime(String conversationId) async{
-    final key= 'conversation:${conversationId}';
+    final key= 'conversation:$conversationId';
     if (ttlBox.containsKey(key)){
       return;
     }
-    ttlBox.put(key, DateTime.now());
+    await ttlBox.put(key, DateTime.now());
+  }
+
+  bool doesMessageExist(String conversationId, String keyType){
+    final conversationMessages= indexBox.get(conversationId) ?? {};
+
+    if (conversationMessages.isEmpty){
+      return false;
+    }
+
+    final stompMessages= conversationMessages['stomp'] ?? [];
+    final apiMessages= conversationMessages['api'] ?? [];
+
+    switch (keyType){
+      case 'stomp':
+        if (stompMessages.isNotEmpty){
+          return true;
+        }
+        break;
+      case 'api':
+        if (apiMessages.isNotEmpty){
+          return true;
+        }
+        break;
+    }
+    return false;
   }
 
   Future<bool> isExpired(String conversationId) async {
-    final key= 'conversation:${conversationId}';
+    final key= 'conversation:$conversationId';
+    print(indexBox.get(conversationId));
     if (!ttlBox.containsKey(key)){
       return true;
     }
     final ttl= ttlBox.get(key);
-    if (DateTime.now().difference(ttl!) > const Duration(minutes: 10)){
-      final messageIdList = indexBox.get(conversationId);
-
-      if (messageIdList!=null && messageIdList.isNotEmpty){
-        await box.deleteAll(messageIdList);
+    print(ttl);
+    if (DateTime.now().difference(ttl!) > const Duration(minutes: 15)){
+      print("Expired");
+      print(indexBox.get(conversationId));
+      final messageIdMap = indexBox.get(conversationId);
+      print(messageIdMap);
+      if (messageIdMap!=null && messageIdMap.isNotEmpty){
+        final messageIdLists= [ ...?messageIdMap['api'], ...?messageIdMap['stomp']];
+        await box.deleteAll(messageIdLists);
       }
-
       await indexBox.delete(conversationId);
       await ttlBox.delete(key);
 
       return true;
     }
+    print("Not expired");
     return false;
   }
 }

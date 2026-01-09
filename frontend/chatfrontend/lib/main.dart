@@ -17,7 +17,7 @@ void main() async {
   Hive.registerAdapter(HiveMessageModelAdapter());
   Hive.registerAdapter(HiveUserModelAdapter());
   await Hive.openBox<HiveMessageModel>('messages');
-  await Hive.openBox<List<String>>('conversationIndex');
+  await Hive.openBox<Map<String, List<String>>>('conversationIndex');
   await Hive.openBox<HiveUserModel>('user');
   await Hive.openBox<DateTime>('dataTTL');
   runApp(ProviderScope(child: ChatApp()));

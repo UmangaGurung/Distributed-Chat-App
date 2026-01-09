@@ -15,13 +15,13 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:chatfrontend/tokenservice.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../tokenutil.dart';
 import '../providers/socketprovider.dart';
 
 import 'package:pixelarticons/pixelarticons.dart';
 import 'package:chatfrontend/constants.dart' as constColor;
 
+import 'chatmemberscreen.dart';
 import 'editchatscreen.dart';
 
 class ChatscreenTest extends ConsumerStatefulWidget {
@@ -47,7 +47,6 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
   late TokenService tokenService;
   late String userId;
 
-  // late final response;
   bool isLoading = true;
 
   @override
@@ -60,96 +59,6 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
     _getMessages();
   }
 
-  Future<void> _getMessages() async {
-    List<MessageDetailsDTO> response = [];
-
-    final conversationId =
-        widget.conversation.conversationResponseDTO.conversationID;
-
-    if (!tokenService.isAuthenticated) {
-      if (!mounted) {
-        return;
-      }
-      await ifTokenIsInvalid(context, tokenService);
-      return;
-    }
-
-    final token = tokenService.token;
-
-    List<MessageResponseDTO> cachedMessages = [];
-    if (!await hiveMessageService.isExpired(conversationId)) {
-      print("Loading messages from hive");
-      cachedMessages = hiveMessageService.getMessages(conversationId, 0);
-      final userIdList =
-          widget.conversation.conversationResponseDTO.participantId;
-      final cachedUserDetails = hiveUserService.getAllCachedUserDetails(
-        userIdList,
-      );
-
-      response = cachedMessages
-          .map((message) {
-            final participantDetails = cachedUserDetails[message.senderId];
-            if (participantDetails == null) return null;
-            return MessageDetailsDTO(
-              messageResponseDTO: message,
-              userDetailsDTO: participantDetails,
-            );
-          })
-          .whereType<MessageDetailsDTO>()
-          .toList();
-    }
-
-    if (cachedMessages.isEmpty) {
-      if (await hiveMessageService.isExpired(conversationId)) {
-        print("Cached has expired as well");
-      }
-      print("Loading messages from API");
-      List<MessageDetailsDTO> apiResponse = await conversationAPIService
-          .getConversationMessages(
-            token,
-            widget.conversation.conversationResponseDTO.conversationID,
-          );
-
-      response = apiResponse;
-
-      final messageDetailsList = apiResponse
-          .map((m) => m.messageResponseDTO)
-          .toList();
-      final userDetailsList = apiResponse.map((u) => u.userDetailsDTO).toList();
-
-      await hiveMessageService.addMessagesToHive(
-        messageDetailsList,
-        conversationId,
-      );
-      await hiveUserService.addListOfUserDetailsToCache(userDetailsList);
-      await hiveMessageService.setExpirationTime(conversationId);
-    }
-
-    print(response);
-    if (!mounted) {
-      return;
-    }
-
-    setState(() {
-      messageList = response;
-      isLoading = false;
-    });
-  }
-
-  Future<void> addLatestMessagesToHive(
-      List<MessageDetailsDTO> messageDetails,
-      String conversationId)
-  async{
-    if (messageDetails.length==1){
-      MessageResponseDTO messageResponseDTO= messageDetails.first.messageResponseDTO;
-      await hiveMessageService.addMessageToHive(messageResponseDTO, conversationId);
-    } else if (messageDetails.length>1){
-      List<MessageResponseDTO> messageResponeDTOList= messageDetails.map(
-              (m) => m.messageResponseDTO).toList();
-      await hiveMessageService.addMessagesToHive(messageResponeDTOList, conversationId);
-    }
-  }
-
   @override
   void dispose() {
     // TODO: implement dispose
@@ -160,7 +69,14 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
   @override
   Widget build(BuildContext context) {
     final convoDetails = widget.conversation.conversationResponseDTO;
-    final participantDetails = widget.conversation.participantDetailsDTO;
+    final participantDetails =
+        widget.conversation.participantDetailsDTO ??
+        ParticipantDetails(
+          userId: '',
+          userName: '',
+          photoUrl: '',
+          phoneNumber: '',
+        );
 
     final messageProviderState = ref.watch(messageProvider);
 
@@ -176,13 +92,12 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
       );
     }
 
-    addLatestMessagesToHive(latestMessageState, convoDetails.conversationID);
+    Set<String> messageIds = messageList
+        .map((m) => m.messageResponseDTO.messageId)
+        .toSet();
 
-    Set<String> messageIds= messageList.map(
-        (m) => m.messageResponseDTO.messageId).toSet();
-
-    List<MessageDetailsDTO> deduplicatedState= latestMessageState.where((ms) {
-        return !messageIds.contains(ms.messageResponseDTO.messageId);
+    List<MessageDetailsDTO> deduplicatedState = latestMessageState.where((ms) {
+      return !messageIds.contains(ms.messageResponseDTO.messageId);
     }).toList();
 
     List<MessageDetailsDTO> allMessages = [
@@ -219,9 +134,35 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
             onSelected: (value) {
               switch (value) {
                 case 'edit':
-                  Navigator.push(context, MaterialPageRoute(
-                      builder: (context) => EditChatScreen()));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => EditChatScreen()),
+                  );
                   break;
+                case 'members':
+                  if (convoDetails.type == "GROUP") {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChatMembers(
+                          participantDetails: participantDetails,
+                          userIdList: convoDetails.participantId,
+                          conversationType: convoDetails.type,
+                        ),
+                      ),
+                    );
+                  } else if (convoDetails.type == "BINARY") {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChatMembers(
+                          participantDetails: participantDetails,
+                          userIdList: [],
+                          conversationType: convoDetails.type,
+                        ),
+                      ),
+                    );
+                  } else {}
               }
             },
             itemBuilder: (context) => [
@@ -232,14 +173,14 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
                   style: TextStyle(color: Colors.white, fontSize: 10),
                 ),
               ),
-              if (convoDetails.type == "GROUP")
-                const PopupMenuItem(
-                  value: 'members',
-                  child: Text(
-                    'Chat Members',
-                    style: TextStyle(color: Colors.white, fontSize: 10),
-                  ),
+              //if (convoDetails.type == "GROUP")
+              const PopupMenuItem(
+                value: 'members',
+                child: Text(
+                  'Chat Members',
+                  style: TextStyle(color: Colors.white, fontSize: 10),
                 ),
+              ),
             ],
           ),
         ],
@@ -312,14 +253,7 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
                     ),
                   ),
                   IconButton(
-                    onPressed: () {
-                      print(
-                        widget
-                            .conversation
-                            .conversationResponseDTO
-                            .conversationID,
-                      );
-                    },
+                    onPressed: () {},
                     padding: EdgeInsets.zero,
                     iconSize: 38,
                     color: constColor.cyancolor,
@@ -332,5 +266,80 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
         ),
       ),
     );
+  }
+
+  Future<void> _getMessages() async {
+    List<MessageDetailsDTO> response = [];
+
+    final conversationId =
+        widget.conversation.conversationResponseDTO.conversationID;
+
+    if (!tokenService.isAuthenticated) {
+      if (!mounted) {
+        return;
+      }
+      await ifTokenIsInvalid(context, tokenService);
+      return;
+    }
+
+    final token = tokenService.token;
+
+    List<MessageResponseDTO> cachedMessages = [];
+    if (!await hiveMessageService.isExpired(conversationId)) {
+      if (hiveMessageService.doesMessageExist(conversationId, 'api')) {
+        print("Loading messages from hive");
+        cachedMessages = hiveMessageService.getMessages(conversationId, 0);
+        final userIdList =
+            widget.conversation.conversationResponseDTO.participantId;
+        final cachedUserDetails = hiveUserService.getAllCachedUserDetails(
+          userIdList,
+        );
+
+        response = cachedMessages
+            .map((message) {
+              final participantDetails = cachedUserDetails[message.senderId];
+              if (participantDetails == null) return null;
+              return MessageDetailsDTO(
+                messageResponseDTO: message,
+                userDetailsDTO: participantDetails,
+              );
+            })
+            .whereType<MessageDetailsDTO>()
+            .toList();
+      }
+    }
+
+    if (cachedMessages.isEmpty) {
+      print("Loading messages from API since cache is empty");
+      List<MessageDetailsDTO> apiResponse = await conversationAPIService
+          .getConversationMessages(
+            token,
+            widget.conversation.conversationResponseDTO.conversationID,
+          );
+
+      response = apiResponse;
+
+      final messageDetailsList = apiResponse
+          .map((m) => m.messageResponseDTO)
+          .toList();
+      final userDetailsList = apiResponse.map((u) => u.userDetailsDTO).toList();
+
+      await hiveMessageService.addMessagesToHive(
+        messageDetailsList,
+        conversationId,
+      );
+      await hiveUserService.addListOfUserDetailsToCache(userDetailsList);
+      await hiveMessageService.setExpirationTime(conversationId);
+    }
+
+    print(response);
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      messageList = response;
+      isLoading = false;
+    });
   }
 }

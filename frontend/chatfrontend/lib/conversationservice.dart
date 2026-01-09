@@ -45,6 +45,7 @@ class ConversationAPIService {
     } catch (e) {
       return null;
     }
+    return null;
   }
 
   Future<List<MessageDetailsDTO>> getConversationMessages(

@@ -10,18 +10,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:chatfrontend/constants.dart' as constants;
 import 'package:google_fonts/google_fonts.dart';
 
-// void main() async {
-//   WidgetsFlutterBinding.ensureInitialized();
-//   //debugPaintSizeEnabled = true;
-//   runApp(
-//     MaterialApp(
-//       debugShowCheckedModeBanner: false,
-//       theme: ThemeData(textTheme: GoogleFonts.pressStart2pTextTheme()),
-//       home: ConversationScreen(),
-//     ),
-//   );
-// }
-
 class ConversationScreen extends ConsumerStatefulWidget {
   const ConversationScreen({super.key});
 

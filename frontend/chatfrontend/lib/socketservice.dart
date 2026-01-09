@@ -122,8 +122,4 @@ class SocketService {
     isConnected = false;
     isSubscribed = false;
   }
-
-  // void setOnMessage(void Function(String) cb) {
-  //   onMessage = cb;
-  // }
 }
