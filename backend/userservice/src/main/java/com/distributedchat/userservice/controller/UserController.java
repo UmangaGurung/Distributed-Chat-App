@@ -22,8 +22,10 @@ import org.springframework.web.multipart.MultipartFile;
 import com.distributedchat.userservice.model.dto.AddPhoneNumberDTO;
 import com.distributedchat.userservice.model.dto.GoogleLoginDTO;
 import com.distributedchat.userservice.model.dto.GoogleResponseDTO;
+import com.distributedchat.userservice.model.dto.ParticipantListDTO;
 import com.distributedchat.userservice.model.dto.RegisterResponseDTO;
 import com.distributedchat.userservice.model.dto.UserDTO;
+import com.distributedchat.userservice.model.dto.UserListDTO;
 import com.distributedchat.userservice.model.dto.UserLoginDTO;
 import com.distributedchat.userservice.model.dto.UserRegistrationDTO;
 import com.distributedchat.userservice.service.JWTService;
@@ -88,19 +90,13 @@ public class UserController {
 		return ResponseEntity.ok(respone);
 	}
 	
-	@GetMapping("/allusers")
-	public ResponseEntity<Map<String, Object>> getUsers(){
-		String uid= SecurityContextHolder.getContext()
-				.getAuthentication()
-				.getPrincipal()
-				.toString();
+	@PostMapping("/allusers")
+	public ResponseEntity<List<UserListDTO>> getUsers(
+			@RequestBody ParticipantListDTO participantListDTO){
+
+		List<UserListDTO> users= userservice.getUsers(participantListDTO);
 		
-		List<UserDTO> users= userservice.getUsers(uid);
-		
-		Map<String, Object> response= new HashMap<>();
-		response.put("users", users);
-		
-		return ResponseEntity.status(HttpStatus.OK).body(response);
+		return ResponseEntity.status(HttpStatus.OK).body(users);
 	}
 	
 	@PatchMapping("/addphone")

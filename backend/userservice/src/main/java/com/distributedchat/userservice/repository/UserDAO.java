@@ -1,11 +1,13 @@
 package com.distributedchat.userservice.repository;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import com.distributedchat.userservice.model.dto.GRPCUserDetailsDTO;
 import com.distributedchat.userservice.model.dto.RegisterResponseDTO;
 import com.distributedchat.userservice.model.dto.UserDTO;
+import com.distributedchat.userservice.model.dto.UserListDTO;
 
 public interface UserDAO {
 	
@@ -13,7 +15,7 @@ public interface UserDAO {
 
 	public UserDTO loginUser(String email, String password);
 	
-	public List<UserDTO> getUsers(UUID uid);
+	public List<UserListDTO> getUsers(Set<UUID> userIdList);
 
 	public boolean doesUserExistsByIdGrpc(UUID userId);
 
