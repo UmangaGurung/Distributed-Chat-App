@@ -247,7 +247,36 @@ class UserAPIService {
     }
   }
 
-  Future<List<ParticipantDetails>> getUserDetails(Set<String> userIdList) async{
+  Future<List<ParticipantDetails>> getUserDetails(Set<String> userIdList, String token) async{
+    final url= Uri.parse(userurl+"/allusers");
+    try{
+      final response= await http.post(
+          url,
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'userIdList': userIdList.toList()
+          })
+      );
+
+      if (response.statusCode==200) {
+        List<dynamic> responseBody = jsonDecode(response.body);
+        print(responseBody);
+        List<ParticipantDetails> participantDetailsList = [];
+
+        for (var user in responseBody) {
+          participantDetailsList.add(
+              ParticipantDetails.fromJson(user)
+          );
+        }
+        print(participantDetailsList);
+        return participantDetailsList;
+      }
+    }catch(e){
+      print(e);
+    }
     return [];
   }
 

@@ -23,6 +23,16 @@ class HiveUserService {
     await box.putAll(userMap);
   }
 
+  ParticipantDetails getUserDetails(String userId){
+    final userModel= box.get(userId);
+
+    return ParticipantDetails(
+        userId: userModel!.userId,
+        userName: userModel.userName,
+        photoUrl: userModel.photoUrl,
+        phoneNumber: userModel.phoneNumber);
+  }
+
   Map<String, ParticipantDetails> getAllCachedUserDetails(
     List<String> userIdList,
   ) {
@@ -48,6 +58,22 @@ class HiveUserService {
       return;
     }
     await ttlBox.put(key, DateTime.now());
+  }
+
+  Future<void> setExpirationTimeBulk(Set<String> userIdSet) async{
+    Map<String, DateTime> userMap= {};
+    final now= DateTime.now();
+    for (String id in userIdSet){
+      final key= 'user:$id';
+      if (ttlBox.containsKey(key)){
+        continue;
+      }
+      userMap[key]= now;
+    }
+
+    if (userMap.isNotEmpty){
+      await ttlBox.putAll(userMap);
+    }
   }
 
   Future<bool> isExpired(String userId) async {
@@ -79,7 +105,6 @@ class HiveUserService {
         expiredIds.add(id);
       }
     }
-
     return expiredIds;
   }
 }

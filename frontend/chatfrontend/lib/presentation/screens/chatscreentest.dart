@@ -140,29 +140,16 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
                   );
                   break;
                 case 'members':
-                  if (convoDetails.type == "GROUP") {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ChatMembers(
-                          participantDetails: participantDetails,
-                          userIdList: convoDetails.participantId,
-                          conversationType: convoDetails.type,
-                        ),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ChatMembers(
+                        userIdList: convoDetails.participantId,
+                        conversationType: convoDetails.type,
                       ),
-                    );
-                  } else if (convoDetails.type == "BINARY") {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ChatMembers(
-                          participantDetails: participantDetails,
-                          userIdList: [],
-                          conversationType: convoDetails.type,
-                        ),
-                      ),
-                    );
-                  } else {}
+                    ),
+                  );
+                  break;
               }
             },
             itemBuilder: (context) => [

@@ -4,7 +4,7 @@ import 'package:hive/hive.dart';
 
 class HiveMessageService {
   final box = Hive.box<HiveMessageModel>('messages');
-  final indexBox = Hive.box<Map<String, List<String>>>('conversationIndex');
+  final indexBox = Hive.box('conversationIndex');
   final ttlBox= Hive.box<DateTime>('dataTTL');
 
   Future<void> addMessagesToHive(
@@ -13,12 +13,12 @@ class HiveMessageService {
   ) async {
     Map<String, HiveMessageModel> hiveMessageMap = {};
 
-    Map<String, List<String>> messageIdMap= indexBox.get(
+    Map<dynamic, dynamic> messageIdMap= indexBox.get(
       conversationId,
       defaultValue: {},
     ) ?? {};
 
-    List<String> messageIdList= messageIdMap['api'] ?? [];
+    List<String> messageIdList= (messageIdMap['api'] as List?)?.cast<String>() ?? [];
 
     for (MessageResponseDTO message in messageList) {
       if (messageIdList.contains(message.messageId)){
@@ -49,12 +49,12 @@ class HiveMessageService {
       MessageResponseDTO messageResponse,
       String conversationId) async{
 
-    Map<String, List<String>> messageIdMap= indexBox.get(
+    Map<dynamic, dynamic> messageIdMap= indexBox.get(
       conversationId,
       defaultValue: {},
     ) ?? {};
 
-    List<String> messageIdList= messageIdMap['stomp'] ?? [];
+    List<String> messageIdList = (messageIdMap['stomp'] as List?)?.cast<String>() ?? [];
 
     if (messageIdList.contains(messageResponse.messageId)){
       return;
@@ -78,7 +78,8 @@ class HiveMessageService {
 
   List<MessageResponseDTO> getMessages(String conversationId, int limitIndex) {
     final messageIdMap = indexBox.get(conversationId) ?? {};
-    final messageIdList= messageIdMap['api'];
+
+    final messageIdList= (messageIdMap['api'] as List).cast<String>();
 
     final messageList = messageIdList!.map((id) => box.get(id)!).toList();
 
@@ -109,12 +110,12 @@ class HiveMessageService {
   bool doesMessageExist(String conversationId, String keyType){
     final conversationMessages= indexBox.get(conversationId) ?? {};
 
-    if (conversationMessages.isEmpty){
+    if (conversationMessages == null || conversationMessages.isEmpty){
       return false;
     }
 
-    final stompMessages= conversationMessages['stomp'] ?? [];
-    final apiMessages= conversationMessages['api'] ?? [];
+    final stompMessages = (conversationMessages['stomp'] as List?)?.cast<String>() ?? [];
+    final apiMessages = (conversationMessages['api'] as List?)?.cast<String>() ?? [];
 
     switch (keyType){
       case 'stomp':
@@ -131,9 +132,11 @@ class HiveMessageService {
     return false;
   }
 
+  //this logic is messy and shit mate, change it
   Future<bool> isExpired(String conversationId) async {
     final key= 'conversation:$conversationId';
-    print(indexBox.get(conversationId));
+    final index = indexBox.get(conversationId);
+    print('1 $index');
     if (!ttlBox.containsKey(key)){
       return true;
     }
@@ -147,6 +150,7 @@ class HiveMessageService {
       if (messageIdMap!=null && messageIdMap.isNotEmpty){
         final messageIdLists= [ ...?messageIdMap['api'], ...?messageIdMap['stomp']];
         await box.deleteAll(messageIdLists);
+        print('yes deleted');
       }
       await indexBox.delete(conversationId);
       await ttlBox.delete(key);

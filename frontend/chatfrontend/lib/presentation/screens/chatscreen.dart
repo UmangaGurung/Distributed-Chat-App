@@ -1,5 +1,6 @@
 import 'package:chatfrontend/presentation/providers/tokenprovider.dart';
 import 'package:chatfrontend/presentation/screens/chat/testscreen.dart';
+import 'package:chatfrontend/presentation/screens/chatmemberscreen.dart';
 import 'package:chatfrontend/presentation/screens/conversationscreen.dart';
 import 'package:chatfrontend/presentation/screens/searchusers.dart';
 import 'package:chatfrontend/presentation/screens/welcome.dart';
@@ -118,6 +119,22 @@ class _ChatscreenState extends ConsumerState<Chatscreen> {
                   );
                 },
                 child: Text("Conversation List"),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ChatMembers(
+                          userIdList: ["e71e45bb-d50c-4c41-953c-ec23e93e51e4",
+                            "cb571f2d-03ce-49ca-ab0f-d9a40e0cd584",
+                            "91ccdbef-a3f4-4514-a20b-1d097f8b538c",
+                            "f0ec8810-1a48-4897-910b-6f932df12a35"],
+                          conversationType: "GROUP"),
+                    ),
+                  );
+                },
+                child: Text("Chat members"),
               ),
             ],
           ),
