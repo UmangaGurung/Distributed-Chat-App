@@ -167,8 +167,7 @@ class _ChatMembersState extends ConsumerState<ChatMembers> {
                 ),
                 child: ClipOval(
                   child: Image.network(user.photoUrl, fit: BoxFit.cover,
-                    height: 70,
-                    width: 60,),
+                  ),
                 ),
               ),
               title: Text(

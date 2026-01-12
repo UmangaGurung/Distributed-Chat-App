@@ -58,6 +58,11 @@ class SocketService {
         callback: callbackTypingEvent
     );
 
+    stompClient.subscribe(
+        destination: '/queue/ack/$userId',
+        callback: callbackSuccessfullySent
+    );
+
     isSubscribed = true;
   }
 
@@ -82,11 +87,11 @@ class SocketService {
     chatMessageState.addNewMessages(messageDetailsDTO);
   }
 
-  void sendMessage(String message) {
+  void sendMessage(String message, String conversationId, String type) {
     final messageData = {
-      'conversationId': '47a33f67-8382-4de5-89b7-49ccbf50eedc',
+      'conversationId': conversationId,
       'message': message,
-      'type': 'TEXT',
+      'type': type,
     };
 
     stompClient.send(
@@ -113,6 +118,25 @@ class SocketService {
     final body= frame.body;
 
     print(body);
+  }
+
+  void callbackSuccessfullySent(StompFrame frame){
+    print("Message successfully sent");
+    final response= jsonDecode(frame.body!);
+
+    print(response);
+
+    ParticipantDetails participantDetails= ParticipantDetails(
+        userId: '',
+        userName: '',
+        photoUrl: '',
+        phoneNumber: '');
+
+    MessageDetailsDTO messageDetailsDTO= MessageDetailsDTO(
+        messageResponseDTO: MessageResponseDTO.fromJson(response),
+        userDetailsDTO: participantDetails);
+
+    chatMessageState.addNewMessages(messageDetailsDTO);
   }
 
   void disconnectConnection() {

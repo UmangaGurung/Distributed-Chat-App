@@ -132,32 +132,30 @@ class HiveMessageService {
     return false;
   }
 
-  //this logic is messy and shit mate, change it
-  Future<bool> isExpired(String conversationId) async {
+  Future<bool> isExpired(String conversationId) async{
     final key= 'conversation:$conversationId';
-    final index = indexBox.get(conversationId);
-    print('1 $index');
-    if (!ttlBox.containsKey(key)){
-      return true;
-    }
-    final ttl= ttlBox.get(key);
-    print(ttl);
-    if (DateTime.now().difference(ttl!) > const Duration(minutes: 15)){
-      print("Expired");
-      print(indexBox.get(conversationId));
-      final messageIdMap = indexBox.get(conversationId);
-      print(messageIdMap);
-      if (messageIdMap!=null && messageIdMap.isNotEmpty){
-        final messageIdLists= [ ...?messageIdMap['api'], ...?messageIdMap['stomp']];
-        await box.deleteAll(messageIdLists);
-        print('yes deleted');
+    final DateTime now= DateTime.now();
+
+    final messageList= indexBox.get(conversationId);
+    final allMessages= [...?messageList?['api'], ...?messageList?['stomp']];
+
+    try{
+      DateTime? value= ttlBox.get(key);
+      
+      if (value==null || now.difference(value) > const Duration(minutes: 15)){
+        await box.deleteAll(allMessages);
+        await indexBox.delete(conversationId);
+        await ttlBox.delete(key);
+
+        return true;
       }
+      return false;
+    }catch(e){
+      print(e);
+      await box.deleteAll(allMessages);
       await indexBox.delete(conversationId);
       await ttlBox.delete(key);
-
       return true;
     }
-    print("Not expired");
-    return false;
   }
 }

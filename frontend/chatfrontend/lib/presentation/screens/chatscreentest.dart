@@ -33,7 +33,6 @@ class ChatscreenTest extends ConsumerStatefulWidget {
 }
 
 class _ChatscreenState extends ConsumerState<ChatscreenTest> {
-  late final ChatMessageState chatMessageState;
   final ConversationAPIService conversationAPIService =
       ConversationAPIService();
 
@@ -69,16 +68,11 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
   @override
   Widget build(BuildContext context) {
     final convoDetails = widget.conversation.conversationResponseDTO;
-    final participantDetails =
-        widget.conversation.participantDetailsDTO ??
-        ParticipantDetails(
-          userId: '',
-          userName: '',
-          photoUrl: '',
-          phoneNumber: '',
-        );
 
     final messageProviderState = ref.watch(messageProvider);
+    final messageService= ref.read(messageProvider.notifier);
+
+    final socket= ref.read(socketService);
 
     final latestMessageState =
         messageProviderState[convoDetails.conversationID] ?? [];
@@ -240,7 +234,22 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
                     ),
                   ),
                   IconButton(
-                    onPressed: () {},
+                    onPressed: () async {
+                      if (!tokenService.isAuthenticated){
+                        await ifTokenIsInvalid(context, tokenService);
+                        return;
+                      }
+                      if (messageField.text.isEmpty){
+                        return;
+                      }
+                      if (!socket.isConnected || !socket.isSubscribed){
+                        //show message sent failed
+                      }
+                      socket.sendMessage(messageField.text, convoDetails.conversationID, 'TEXT');
+                      setState(() {
+                        messageField.clear();
+                      });
+                    },
                     padding: EdgeInsets.zero,
                     iconSize: 38,
                     color: constColor.cyancolor,

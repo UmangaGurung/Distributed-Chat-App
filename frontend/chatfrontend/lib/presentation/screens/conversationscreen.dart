@@ -1,5 +1,6 @@
 import 'package:chatfrontend/conversationservice.dart';
 import 'package:chatfrontend/dto/conversation/conversation&userdetailsdto.dart';
+import 'package:chatfrontend/dto/message/messagedetailsdto.dart';
 import 'package:chatfrontend/presentation/providers/socketprovider.dart';
 import 'package:chatfrontend/presentation/providers/tokenprovider.dart';
 import 'package:chatfrontend/presentation/screens/chatscreentest.dart';
@@ -21,6 +22,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
   final ConversationAPIService conversationAPIService =
       ConversationAPIService();
   late TokenService tokenService;
+  late String userId;
 
   List<ConversationAndUserDetailsDTO> conversationList = [];
   bool isLoading = true;
@@ -30,6 +32,8 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     // TODO: implement initState
     super.initState();
     tokenService = ref.read(tokenProvider.notifier);
+    final claims= tokenService.tokenDecode();
+    userId= claims['sub'];
     _loadAllConversations();
   }
 
@@ -65,8 +69,6 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
   Widget build(BuildContext context) {
     final messageService= ref.watch(messageProvider);
 
-    print(messageService);
-
     if (isLoading) {
       return const Scaffold(
         backgroundColor: constants.blackcolor,
@@ -99,6 +101,10 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
 
                 final latestMessageState= messageService[convoId];
 
+                final excludedUserMessages= latestMessageState?.where(
+                    (m)=> m.messageResponseDTO.senderId!=userId
+                ).toList() ?? [];
+
                 String messageDate;
                 String latestMessage;
                 String messageCount;
@@ -109,18 +115,22 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
                   messageCount= '';
                   messageStyle= latestMessageColor(0.5);
                   messageDate= conversation.conversationResponseDTO.updatedAt;
-                } else if (latestMessageState.isNotEmpty && latestMessageState.length>1){
+                } else if (excludedUserMessages.isNotEmpty && excludedUserMessages.length>1){
                   latestMessage= "New Messages";
-                  messageCount= latestMessageState.length.toString();
+                  messageCount= excludedUserMessages.length.toString();
                   messageStyle= latestMessageColor(1);
-                  messageDate= latestMessageState.last.messageResponseDTO.createdAt;
-                }
-                else{
-                  final messageDTO= latestMessageState.last;
+                  messageDate= excludedUserMessages.first.messageResponseDTO.createdAt;
+                } else if (excludedUserMessages.isNotEmpty && excludedUserMessages.length==1){
+                  final messageDTO= excludedUserMessages.first;
                   latestMessage= messageDTO.messageResponseDTO.message;
-                  messageCount= latestMessageState.length.toString();
+                  messageCount= excludedUserMessages.length.toString();
                   messageStyle= latestMessageColor(1);
                   messageDate= messageDTO.messageResponseDTO.createdAt;
+                } else {
+                  latestMessage= latestMessageState.first.messageResponseDTO.message;
+                  messageCount= '';
+                  messageStyle= latestMessageColor(0.5);
+                  messageDate= conversation.conversationResponseDTO.updatedAt;
                 }
 
                 return InkWell(
