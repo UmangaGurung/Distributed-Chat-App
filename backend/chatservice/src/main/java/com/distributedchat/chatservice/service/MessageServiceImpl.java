@@ -52,22 +52,23 @@ public class MessageServiceImpl implements MessageService{
 	public void saveMessage(MessageDTO messageDTO, String userId) {
 		// TODO Auto-generated method stub
 		try {
-		UUID uid= UUID.fromString(userId);
-		String plainMessage= messageDTO.getMessage();
+			UUID uid= UUID.fromString(userId);
+			String plainMessage= messageDTO.getMessage();
 		
-		String cipheredMessage= messageEncryption.encryptMessage(plainMessage);
-		if (cipheredMessage.isEmpty() || cipheredMessage==null) {
-			throw new IllegalArgumentException();
+			String cipheredMessage= messageEncryption.encryptMessage(plainMessage);
+			if (cipheredMessage.isEmpty() || cipheredMessage==null) {
+				throw new IllegalArgumentException();
+			}
+			messageDTO.setMessage(cipheredMessage);
+		
+			MessageRedisPayloadDTO payloadDTO= messageDAO.saveMessage(messageDTO, uid);
+			
+			messagePublisher.onMessageSuccess(payloadDTO, userId);
+			messagePublisher.publishMessage(payloadDTO);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw e;  // Re-throw so behavior doesn't change
 		}
-		messageDTO.setMessage(cipheredMessage);
-		
-		MessageRedisPayloadDTO payloadDTO= messageDAO.saveMessage(messageDTO, uid);
-		
-		messagePublisher.publishMessage(payloadDTO);
-    } catch (Exception e) {
-        e.printStackTrace();
-        throw e;  // Re-throw so behavior doesn't change
-    }
 	}
 
 	@Override

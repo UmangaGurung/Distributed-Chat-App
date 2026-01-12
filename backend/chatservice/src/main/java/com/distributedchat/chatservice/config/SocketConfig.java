@@ -33,6 +33,6 @@ public class SocketConfig implements WebSocketMessageBrokerConfigurer{
 	
 	public void configureMessageBroker(MessageBrokerRegistry brokerRegistry) {
 		brokerRegistry.setApplicationDestinationPrefixes("/app");
-		brokerRegistry.enableSimpleBroker("/topic");
+		brokerRegistry.enableSimpleBroker("/topic", "/queue");
 	}
 }
