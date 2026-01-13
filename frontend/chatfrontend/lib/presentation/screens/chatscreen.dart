@@ -70,7 +70,6 @@ class _ChatscreenState extends ConsumerState<Chatscreen> {
                       await authService.clearToken();
                       return;
                     }
-                    // socket.sendMessage("Message $counter TEST CHAT 456");
                     counter++;
                   },
                   child: Text("Send"),

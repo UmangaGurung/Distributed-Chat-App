@@ -51,21 +51,34 @@ class ConversationAPIService {
   Future<List<MessageDetailsDTO>> getConversationMessages(
     String token,
     String conversationId,
+    String messageId,
+    String timeStamp,
+    int limit,
+    bool firstFetch,
   ) async {
+    print(messageId);
+    print(timeStamp);
+    print(limit);
+    print(firstFetch);
     try {
-      final url = Uri.parse(
-        conversationUrl + "/${conversationId}/messages",
-      );
+      final url = Uri.parse(conversationUrl + "/${conversationId}/messages");
 
-      final response = await http.get(
+      final response = await http.post(
         url,
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
+        body: jsonEncode({
+          'messageId': messageId,
+          'timeStamp': timeStamp,
+          'limit': limit,
+          'firstFetch': firstFetch,
+        }),
       );
 
       if (response.statusCode == 200) {
+        print(response.body);
         final List<dynamic> data = jsonDecode(response.body);
         final List<MessageDetailsDTO> messageDetailsList = [];
         print(data);
@@ -91,7 +104,9 @@ class ConversationAPIService {
     }
   }
 
-  Future<List<ConversationAndUserDetailsDTO>> getAllConversations(String token) async {
+  Future<List<ConversationAndUserDetailsDTO>> getAllConversations(
+    String token,
+  ) async {
     try {
       final url = Uri.parse(conversationUrl);
 

@@ -31,6 +31,7 @@ class HiveMessageService {
         message: message.message,
         messageType: message.messageType,
         createdAt: message.createdAt,
+        createdAtFormatted: message.createdAtFormatted,
         senderId: message.senderId,
       );
 
@@ -66,6 +67,7 @@ class HiveMessageService {
         message: messageResponse.message,
         messageType: messageResponse.messageType,
         createdAt: messageResponse.createdAt,
+        createdAtFormatted: messageResponse.createdAtFormatted,
         senderId: messageResponse.senderId
     );
 
@@ -91,6 +93,7 @@ class HiveMessageService {
         message: message.message,
         messageType: message.messageType,
         createdAt: message.createdAt,
+        createdAtFormatted: message.createdAtFormatted,
         senderId: message.senderId,
       );
       messageResponseList.insert(0, messageResponseDTO);

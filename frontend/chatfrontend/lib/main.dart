@@ -1,3 +1,4 @@
+import 'package:chatfrontend/cache/model/conversationcache.dart';
 import 'package:chatfrontend/cache/model/messagecache.dart';
 import 'package:chatfrontend/cache/model/userdetailscache.dart';
 import 'package:chatfrontend/presentation/providers/tokenprovider.dart';

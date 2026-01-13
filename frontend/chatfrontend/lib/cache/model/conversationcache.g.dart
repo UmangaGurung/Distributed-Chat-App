@@ -1,50 +1,47 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'messagecache.dart';
+part of 'conversationcache.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class HiveMessageModelAdapter extends TypeAdapter<HiveMessageModel> {
+class HiveConversationModelAdapter extends TypeAdapter<HiveConversationModel> {
   @override
-  final int typeId = 2;
+  final int typeId = 1;
 
   @override
-  HiveMessageModel read(BinaryReader reader) {
+  HiveConversationModel read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return HiveMessageModel(
+    return HiveConversationModel(
       conversationId: fields[0] as String,
-      messageId: fields[1] as String,
-      message: fields[2] as String,
-      messageType: fields[3] as String,
-      createdAt: fields[4] as String,
-      createdAtFormatted: fields[5] as String,
-      senderId: fields[6] as String,
+      conversationName: fields[1] as String,
+      lastMessage: fields[2] as String,
+      participantId: (fields[3] as List).cast<String>(),
+      updatedAt: fields[4] as String,
+      type: fields[5] as String,
     );
   }
 
   @override
-  void write(BinaryWriter writer, HiveMessageModel obj) {
+  void write(BinaryWriter writer, HiveConversationModel obj) {
     writer
-      ..writeByte(7)
+      ..writeByte(6)
       ..writeByte(0)
       ..write(obj.conversationId)
       ..writeByte(1)
-      ..write(obj.messageId)
+      ..write(obj.conversationName)
       ..writeByte(2)
-      ..write(obj.message)
+      ..write(obj.lastMessage)
       ..writeByte(3)
-      ..write(obj.messageType)
+      ..write(obj.participantId)
       ..writeByte(4)
-      ..write(obj.createdAt)
+      ..write(obj.updatedAt)
       ..writeByte(5)
-      ..write(obj.createdAtFormatted)
-      ..writeByte(6)
-      ..write(obj.senderId);
+      ..write(obj.type);
   }
 
   @override
@@ -53,7 +50,7 @@ class HiveMessageModelAdapter extends TypeAdapter<HiveMessageModel> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is HiveMessageModelAdapter &&
+      other is HiveConversationModelAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

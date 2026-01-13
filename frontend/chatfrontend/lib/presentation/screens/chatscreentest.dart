@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:chatfrontend/cache/model/userdetailscache.dart';
@@ -39,6 +40,9 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
   final HiveMessageService hiveMessageService = HiveMessageService();
   final HiveUserService hiveUserService = HiveUserService();
 
+  final ScrollController _scrollController = ScrollController();
+  final _limit = 20;
+
   List<MessageDetailsDTO> messageList = [];
 
   final messageField = TextEditingController();
@@ -47,6 +51,12 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
   late String userId;
 
   bool isLoading = true;
+  bool firstFetch= true;
+  bool apiFetch= false;
+
+  Timer? _timer;
+  Timer? _typingTimer;
+  bool isTyping = false;
 
   @override
   void initState() {
@@ -55,7 +65,18 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
     tokenService = ref.read(tokenProvider.notifier);
     final token = tokenService.tokenDecode();
     userId = token['sub'];
-    _getMessages();
+    _getMessages('', '', _limit);
+
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >=
+          _scrollController.position.maxScrollExtent - 30 && !isLoading) {
+        _getMessages(
+          messageList.last.messageResponseDTO.messageId,
+          messageList.last.messageResponseDTO.createdAt,
+          _limit,
+        );
+      }
+    });
   }
 
   @override
@@ -70,9 +91,9 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
     final convoDetails = widget.conversation.conversationResponseDTO;
 
     final messageProviderState = ref.watch(messageProvider);
-    final messageService= ref.read(messageProvider.notifier);
+    final messageService = ref.read(messageProvider.notifier);
 
-    final socket= ref.read(socketService);
+    final socket = ref.read(socketService);
 
     final latestMessageState =
         messageProviderState[convoDetails.conversationID] ?? [];
@@ -171,15 +192,25 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
           children: [
             Expanded(
               child: ListView.builder(
+                controller: _scrollController,
                 reverse: true,
-                itemCount: allMessages.length,
+                itemCount: allMessages.length+(apiFetch ? 1:0),
                 itemBuilder: (context, index) {
+                  if (apiFetch && index==allMessages.length){
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
                   final message = allMessages[index];
-                  return MessageBubble(
-                    key: ValueKey(message.messageResponseDTO.messageId),
-                    messageResponseDTO: message.messageResponseDTO,
-                    senderDetailsDTO: message.userDetailsDTO,
-                    userId: userId,
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: MessageBubble(
+                      key: ValueKey(message.messageResponseDTO.messageId),
+                      messageResponseDTO: message.messageResponseDTO,
+                      senderDetailsDTO: message.userDetailsDTO,
+                      userId: userId,
+                    ),
                   );
                 },
               ),
@@ -208,6 +239,34 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
                   SizedBox(width: 6),
                   Expanded(
                     child: TextField(
+                      onChanged: (value) {
+                        _timer?.cancel();
+
+                        _timer = Timer(Duration(milliseconds: 3000), () {
+                          _typingTimer?.cancel();
+                          isTyping = false;
+                        });
+
+                        if (!isTyping) {
+                          isTyping = true;
+                          socket.typingEvent(
+                            convoDetails.conversationID,
+                            userId,
+                            'STARTED_TYPING',
+                          );
+
+                          _typingTimer = Timer.periodic(
+                            Duration(milliseconds: 2000),
+                            (Timer timer) {
+                              socket.typingEvent(
+                                convoDetails.conversationID,
+                                userId,
+                                'STILL_TYPING',
+                              );
+                            },
+                          );
+                        }
+                      },
                       controller: messageField,
                       maxLength: 500,
                       style: TextStyle(color: Colors.white),
@@ -235,17 +294,21 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
                   ),
                   IconButton(
                     onPressed: () async {
-                      if (!tokenService.isAuthenticated){
+                      if (!tokenService.isAuthenticated) {
                         await ifTokenIsInvalid(context, tokenService);
                         return;
                       }
-                      if (messageField.text.isEmpty){
+                      if (messageField.text.isEmpty) {
                         return;
                       }
-                      if (!socket.isConnected || !socket.isSubscribed){
+                      if (!socket.isConnected || !socket.isSubscribed) {
                         //show message sent failed
                       }
-                      socket.sendMessage(messageField.text, convoDetails.conversationID, 'TEXT');
+                      socket.sendMessage(
+                        messageField.text,
+                        convoDetails.conversationID,
+                        'TEXT',
+                      );
                       setState(() {
                         messageField.clear();
                       });
@@ -264,7 +327,20 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
     );
   }
 
-  Future<void> _getMessages() async {
+  Future<void> _getMessages(
+    String messageId,
+    String timeStamp,
+    int limit,
+  ) async {
+    if (apiFetch){
+      return;
+    }
+    print(messageId);
+    print(timeStamp);
+    setState(() {
+      apiFetch= true;
+    });
+
     List<MessageDetailsDTO> response = [];
 
     final conversationId =
@@ -281,28 +357,28 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
     final token = tokenService.token;
 
     List<MessageResponseDTO> cachedMessages = [];
-    if (!await hiveMessageService.isExpired(conversationId)) {
-      if (hiveMessageService.doesMessageExist(conversationId, 'api')) {
-        print("Loading messages from hive");
-        cachedMessages = hiveMessageService.getMessages(conversationId, 0);
-        final userIdList =
-            widget.conversation.conversationResponseDTO.participantId;
-        final cachedUserDetails = hiveUserService.getAllCachedUserDetails(
-          userIdList,
-        );
+    if (!await hiveMessageService.isExpired(conversationId) &&
+        hiveMessageService.doesMessageExist(conversationId, 'api') && firstFetch==true) {
+      print("Loading messages from hive");
 
-        response = cachedMessages
-            .map((message) {
-              final participantDetails = cachedUserDetails[message.senderId];
-              if (participantDetails == null) return null;
-              return MessageDetailsDTO(
-                messageResponseDTO: message,
-                userDetailsDTO: participantDetails,
-              );
-            })
-            .whereType<MessageDetailsDTO>()
-            .toList();
-      }
+      cachedMessages = hiveMessageService.getMessages(conversationId, 15);
+      final userIdList =
+          widget.conversation.conversationResponseDTO.participantId;
+      final cachedUserDetails = hiveUserService.getAllCachedUserDetails(
+        userIdList,
+      );
+
+      response = cachedMessages
+          .map((message) {
+            final participantDetails = cachedUserDetails[message.senderId];
+            if (participantDetails == null) return null;
+            return MessageDetailsDTO(
+              messageResponseDTO: message,
+              userDetailsDTO: participantDetails,
+            );
+          })
+          .whereType<MessageDetailsDTO>()
+          .toList();
     }
 
     if (cachedMessages.isEmpty) {
@@ -311,21 +387,35 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
           .getConversationMessages(
             token,
             widget.conversation.conversationResponseDTO.conversationID,
+            messageId,
+            timeStamp,
+            limit,
+            firstFetch,
           );
 
       response = apiResponse;
 
-      final messageDetailsList = apiResponse
-          .map((m) => m.messageResponseDTO)
-          .toList();
-      final userDetailsList = apiResponse.map((u) => u.userDetailsDTO).toList();
+      if (firstFetch) {
+        print('Since first fetch');
+        final messageDetailsList = apiResponse
+            .map((m) => m.messageResponseDTO)
+            .toList();
+        final userDetailsList = apiResponse
+            .map((u) => u.userDetailsDTO)
+            .toList();
 
-      await hiveMessageService.addMessagesToHive(
-        messageDetailsList,
-        conversationId,
-      );
-      await hiveUserService.addListOfUserDetailsToCache(userDetailsList);
-      await hiveMessageService.setExpirationTime(conversationId);
+        await hiveMessageService.addMessagesToHive(
+          messageDetailsList,
+          conversationId,
+        );
+
+        Set<String> userIdSet= apiResponse.map(
+            (u) => u.userDetailsDTO.userId).toSet();
+
+        await hiveUserService.addListOfUserDetailsToCache(userDetailsList);
+        await hiveUserService.setExpirationTimeBulk(userIdSet);
+        await hiveMessageService.setExpirationTime(conversationId);
+      }
     }
 
     print(response);
@@ -333,9 +423,17 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
       return;
     }
 
+    if (!firstFetch){
+      await Future.delayed(Duration(milliseconds: 500));
+    }
+
     setState(() {
-      messageList = response;
+      messageList = [...messageList, ...response];
       isLoading = false;
+      if (firstFetch){
+        firstFetch= false;
+      }
+      apiFetch= false;
     });
   }
 }

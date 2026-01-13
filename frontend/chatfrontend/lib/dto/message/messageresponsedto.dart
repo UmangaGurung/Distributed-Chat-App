@@ -8,6 +8,7 @@ class MessageResponseDTO {
   final String message;
   final String messageType;
   final String createdAt;
+  final String createdAtFormatted;
   final String senderId;
 
   MessageResponseDTO({
@@ -16,6 +17,7 @@ class MessageResponseDTO {
     required this.message,
     required this.messageType,
     required this.createdAt,
+    required this.createdAtFormatted,
     required this.senderId,
   });
 
@@ -29,8 +31,8 @@ class MessageResponseDTO {
       messageId: jsonData['messageId'],
       message: jsonData['message'],
       messageType: jsonData['messageType'],
-      // createdAt: DateTime.parse(jsonData['createdAt']),
-      createdAt: time,
+      createdAt: jsonData['createdAt'],
+      createdAtFormatted: time,
       senderId: jsonData['senderId'],
     );
   }

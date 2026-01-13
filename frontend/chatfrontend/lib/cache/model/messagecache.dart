@@ -21,6 +21,9 @@ class HiveMessageModel extends HiveObject {
   final String createdAt;
 
   @HiveField(5)
+  final String createdAtFormatted;
+
+  @HiveField(6)
   final String senderId;
 
   HiveMessageModel({
@@ -29,6 +32,7 @@ class HiveMessageModel extends HiveObject {
     required this.message,
     required this.messageType,
     required this.createdAt,
+    required this.createdAtFormatted,
     required this.senderId,
   });
 }

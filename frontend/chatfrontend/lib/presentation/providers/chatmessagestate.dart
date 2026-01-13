@@ -31,16 +31,13 @@ class ChatMessageState extends Notifier<Map<String, List<MessageDetailsDTO>>> {
 
   void addNewMessages(MessageDetailsDTO message) {
     final conversationId = message.messageResponseDTO.conversationId;
-    print(message.messageResponseDTO.message);
-    final existingMessages = state[conversationId] ?? const [];
 
+    final existingMessages = state[conversationId] ?? const [];
 
     state = {
       ...state,
       conversationId: [message, ...existingMessages],
     };
-    print("before chat bubble render ${message.messageResponseDTO.message}");
-    print('The state is working fine ${state[conversationId]?.first.messageResponseDTO.message}');
 
     _queue.add(message.messageResponseDTO);
   }

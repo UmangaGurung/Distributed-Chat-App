@@ -119,13 +119,13 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
                   latestMessage= "New Messages";
                   messageCount= excludedUserMessages.length.toString();
                   messageStyle= latestMessageColor(1);
-                  messageDate= excludedUserMessages.first.messageResponseDTO.createdAt;
+                  messageDate= excludedUserMessages.first.messageResponseDTO.createdAtFormatted;
                 } else if (excludedUserMessages.isNotEmpty && excludedUserMessages.length==1){
                   final messageDTO= excludedUserMessages.first;
                   latestMessage= messageDTO.messageResponseDTO.message;
                   messageCount= excludedUserMessages.length.toString();
                   messageStyle= latestMessageColor(1);
-                  messageDate= messageDTO.messageResponseDTO.createdAt;
+                  messageDate= messageDTO.messageResponseDTO.createdAtFormatted;
                 } else {
                   latestMessage= latestMessageState.first.messageResponseDTO.message;
                   messageCount= '';
