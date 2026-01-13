@@ -8,6 +8,7 @@ import com.distributedchat.chatservice.model.dto.Conversation.ConversationRespon
 import com.distributedchat.chatservice.model.dto.Conversation.ConversationUpdateDTO;
 import com.distributedchat.chatservice.model.dto.Conversation.ConvoMessageDTO;
 import com.distributedchat.chatservice.model.dto.Conversation.CreateOrFindDTO;
+import com.distributedchat.chatservice.model.dto.Message.MessagePaginationDTO;
 
 public interface ConversationService {
 	public ConversationResponseDTO createGroupConversation(ConversationGroupDTO conversationGroupDTO, String uid);
@@ -16,10 +17,9 @@ public interface ConversationService {
 
 	public List<ConversationDetailsListDTO> getConversation(String uid);
 
-	//public void addUserToConversation(String userId, String convoId, ConversationUpdateDTO conversationUpdateDTO);
 	public ConversationResponseDTO editConversationDetails(ConversationUpdateDTO conversationUpdateDTO, String convoId, String userId);
 	
 	public ConversationResponseDTO addParticipants(ConversationUpdateDTO conversationUpdateDTO, String convoId, String userId);
 	
-	public List<ConvoMessageDTO> getAllConversationMessages(String convoId, String userId);
+	public List<ConvoMessageDTO> getAllConversationMessages(String convoId, String userId, MessagePaginationDTO messagePaginationDTO);
 }

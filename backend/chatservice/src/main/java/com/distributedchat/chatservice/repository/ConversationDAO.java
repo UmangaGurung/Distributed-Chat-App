@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.distributedchat.chatservice.model.dto.Conversation.ConversationResponseDTO;
+import com.distributedchat.chatservice.model.dto.Message.MessagePaginationDTO;
 import com.distributedchat.chatservice.model.dto.Message.MessageResponseDTO;
 
 public interface ConversationDAO {
@@ -18,5 +19,5 @@ public interface ConversationDAO {
 
 	public ConversationResponseDTO addParticipants(UUID userId, UUID conversationId, List<UUID> userIds);
 
-	public List<MessageResponseDTO> getAllConversationMessages(UUID convoId, UUID userId);
+	public List<MessageResponseDTO> getAllConversationMessages(UUID convoId, UUID userId, MessagePaginationDTO messagePaginationDTO);
 }

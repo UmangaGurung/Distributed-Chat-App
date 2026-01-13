@@ -22,6 +22,7 @@ import com.distributedchat.chatservice.model.dto.Conversation.ConversationUpdate
 import com.distributedchat.chatservice.model.dto.Conversation.ConvoMessageDTO;
 import com.distributedchat.chatservice.model.dto.Conversation.CreateOrFindDTO;
 import com.distributedchat.chatservice.model.dto.Conversation.UpdateType;
+import com.distributedchat.chatservice.model.dto.Message.MessagePaginationDTO;
 import com.distributedchat.chatservice.service.ConversationService;
 
 @RestController
@@ -96,17 +97,16 @@ public class ConversationController {
 		 return ResponseEntity.badRequest().build();
 	}
 	
-	@GetMapping("/conversations/{conversationId}/messages")
+	@PostMapping("/conversations/{conversationId}/messages")
 	public ResponseEntity<List<ConvoMessageDTO>> getConversationMessages(
-			@PathVariable("conversationId") String convoId){
+			@PathVariable("conversationId") String convoId,
+			@RequestBody MessagePaginationDTO messagePaginationDTO){
 		String userId= SecurityContextHolder.getContext()
 				.getAuthentication()
 				.getPrincipal()
 				.toString();
 		
-		List<ConvoMessageDTO> allMessages= conversationService.getAllConversationMessages(convoId, userId);
-//		Map<String, Object> response= new HashMap<>();
-//		response.put("messages", allMessages);
+		List<ConvoMessageDTO> allMessages= conversationService.getAllConversationMessages(convoId, userId, messagePaginationDTO);
 		
 		return ResponseEntity.status(HttpStatus.OK).body(allMessages);
 	}

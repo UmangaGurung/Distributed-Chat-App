@@ -19,6 +19,7 @@ import com.distributedchat.chatservice.model.dto.Conversation.ConversationRespon
 import com.distributedchat.chatservice.model.dto.Conversation.ConversationUpdateDTO;
 import com.distributedchat.chatservice.model.dto.Conversation.ConvoMessageDTO;
 import com.distributedchat.chatservice.model.dto.Conversation.CreateOrFindDTO;
+import com.distributedchat.chatservice.model.dto.Message.MessagePaginationDTO;
 import com.distributedchat.chatservice.model.dto.Message.MessageResponseDTO;
 import com.distributedchat.chatservice.repository.ConversationDAO;
 
@@ -172,12 +173,13 @@ public class ConversationServiceImpl implements ConversationService {
 	}
 	
 	@Override
-	public List<ConvoMessageDTO> getAllConversationMessages(String convoIdString, String userIdString) {
+	public List<ConvoMessageDTO> getAllConversationMessages(
+			String convoIdString, String userIdString, MessagePaginationDTO messagePaginationDTO) {
 		// TODO Auto-generated method stub
 		UUID convoId= UUID.fromString(convoIdString);
 		UUID userId= UUID.fromString(userIdString);
 		
-		List<MessageResponseDTO> allMessages= conversationDAO.getAllConversationMessages(convoId, userId);
+		List<MessageResponseDTO> allMessages= conversationDAO.getAllConversationMessages(convoId, userId, messagePaginationDTO);
 		
 		List<UUID> senderIdList= allMessages.stream()
 				.map(m -> m.getSenderId())
@@ -203,5 +205,5 @@ public class ConversationServiceImpl implements ConversationService {
 			allMessageDTOs.add(messageDTO);
 		}
 		return allMessageDTOs;
-	} 
+	}
 }

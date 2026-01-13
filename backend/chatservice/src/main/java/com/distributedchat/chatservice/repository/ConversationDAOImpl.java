@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import com.distributedchat.chatservice.component.UserGrpcClient;
 import com.distributedchat.chatservice.model.dto.Conversation.ConversationResponseDTO;
+import com.distributedchat.chatservice.model.dto.Message.MessagePaginationDTO;
 import com.distributedchat.chatservice.model.dto.Message.MessageResponseDTO;
 import com.distributedchat.chatservice.model.entity.Conversation;
 import com.distributedchat.chatservice.model.entity.ConversationParticipants;
@@ -21,12 +22,10 @@ import jakarta.persistence.TypedQuery;
 public class ConversationDAOImpl implements ConversationDAO{
 	
 	private EntityManager entityManager;
-	//private UserGrpcClient grpcClient;
 	
 	public ConversationDAOImpl(EntityManager entityManager, UserGrpcClient grpcClient) {
 		// TODO Auto-generated constructor stub
 		this.entityManager= entityManager;
-		//this.grpcClient= grpcClient;
 	}
 
 	@Override
@@ -218,7 +217,8 @@ public class ConversationDAOImpl implements ConversationDAO{
 	}
 
 	@Override
-	public List<MessageResponseDTO> getAllConversationMessages(UUID convoId, UUID userId) {
+	public List<MessageResponseDTO> getAllConversationMessages(
+			UUID convoId, UUID userId, MessagePaginationDTO messagePaginationDTO) {
 		// TODO Auto-generated method stub
 		try {
 			Conversation conversation= entityManager.find(Conversation.class, convoId);
@@ -231,18 +231,36 @@ public class ConversationDAOImpl implements ConversationDAO{
 				throw new SecurityException();
 			}
 			
+			if (messagePaginationDTO.isFirstFetch()) {
+				
+				TypedQuery<MessageResponseDTO> query= entityManager.createQuery(
+						"SELECT new com.distributedchat.chatservice.model.dto.Message.MessageResponseDTO("
+						+ "m.conversation.conversationId, "
+						+ "m.messageId, m.message, "
+						+ "m.type, m.senderId, m.createdAt) "
+						+ "FROM Message m WHERE m.conversation.conversationId=:convoId "
+						+ "ORDER BY m.createdAt DESC", MessageResponseDTO.class)
+						.setParameter("convoId", convoId)
+						.setMaxResults(messagePaginationDTO.getLimit());
+						
+				List<MessageResponseDTO> allMessages= query.getResultList();
+				
+				return allMessages;
+			}
+			
 			TypedQuery<MessageResponseDTO> query= entityManager.createQuery(
 					"SELECT new com.distributedchat.chatservice.model.dto.Message.MessageResponseDTO("
-					+ "m.conversation.conversationId, "
-					+ "m.messageId, m.message, "
-					+ "m.type, m.senderId, m.createdAt) "
+					+ "m.conversation.conversationId, m.messageId, "
+					+ "m.message, m.type, m.senderId, m.createdAt) "
 					+ "FROM Message m WHERE m.conversation.conversationId=:convoId "
+					+ "AND (m.createdAt < :timeStamp OR (m.createdAt=:timeStamp AND m.messageId < :messageId)) "
 					+ "ORDER BY m.createdAt DESC", MessageResponseDTO.class)
-					.setParameter("convoId", convoId);
-					
-			List<MessageResponseDTO> allMessages= query.getResultList();
+					.setParameter("convoId", convoId)
+					.setParameter("messageId", messagePaginationDTO.getMessageId())
+					.setParameter("timeStamp", messagePaginationDTO.getTimeStamp())
+					.setMaxResults(messagePaginationDTO.getLimit());
 			
-			return allMessages;
+			return query.getResultList();
 		}catch(Exception e) {
 			e.printStackTrace();
 			return null;
