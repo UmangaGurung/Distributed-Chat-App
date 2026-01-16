@@ -1,11 +1,13 @@
 import 'package:chatfrontend/cache/service/hiveuserservice.dart';
 import 'package:chatfrontend/dto/conversation/participantdetails.dart';
 import 'package:chatfrontend/presentation/providers/tokenprovider.dart';
+import 'package:chatfrontend/presentation/screens/initiatechatbutton.dart';
 import 'package:chatfrontend/tokenservice.dart';
 import 'package:chatfrontend/userapiservice.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:chatfrontend/constants.dart' as constColor;
+import 'package:pixelarticons/pixel.dart';
 
 class ChatMembers extends ConsumerStatefulWidget {
   final List<String> userIdList;
@@ -146,37 +148,90 @@ class _ChatMembersState extends ConsumerState<ChatMembers> {
         backgroundColor: constColor.blackcolor,
         automaticallyImplyLeading: false,
         centerTitle: true,
-        title: const Text(
-          "CHAT MEMBERS",
-          style: const TextStyle(color: constColor.cyancolor, fontSize: 14),
+        title: Padding(
+          padding: const EdgeInsets.only(top: 30),
+          child: const Text(
+            "CHAT MEMBERS",
+            style: TextStyle(color: constColor.cyancolor, fontSize: 20),
+          ),
         ),
       ),
       body: SafeArea(
-        child: ListView.builder(
-          itemCount: userDetailsList.length,
-          itemBuilder: (context, index) {
-            final user = userDetailsList[index];
-            return ListTile(
-              leading: Container(
-                height: 70,
-                width: 60,
-                decoration: BoxDecoration(
-                  color: constColor.blackcolor,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.grey[300]!, width: 2),
-                ),
-                child: ClipOval(
-                  child: Image.network(user.photoUrl, fit: BoxFit.cover,
+        child: Column(
+          children: [
+            SizedBox(height: 25,),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: userDetailsList.length,
+                itemBuilder: (context, index) {
+                  final user = userDetailsList[index];
+                  return ListTile(
+                    leading: Container(
+                      height: 70,
+                      width: 60,
+                      decoration: BoxDecoration(
+                        color: constColor.blackcolor,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.grey[300]!, width: 2),
+                      ),
+                      child: ClipOval(
+                        child: Image.network(user.photoUrl, fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    title: Text(
+                      user.userName,
+                      style: TextStyle(color: constColor.magentacolor),
+                    ),
+                    subtitle: Text(user.phoneNumber),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 25,),
+            if (widget.conversationType=='GROUP')
+            ClipPath(
+              clipper: InitiateChatButton(),
+              child: GestureDetector(
+                onTap: () {
+
+                },
+                child: Container(
+                  height: MediaQuery.of(context).size.width*0.13,
+                  width: MediaQuery.of(context).size.width*0.65,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: <Color>[
+                          Color(0xFFFF006E),
+                          Color(0xFF8800FF),
+                        ]
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Pixel.userplus,
+                        color: constColor.cyancolor,
+                      ),
+                      SizedBox(width: 10,),
+                      Text(
+                        "ADD PEOPLE",
+                        style: TextStyle(
+                          color: constColor.cyancolor,
+                          fontSize: 14
+                        ),
+                      )
+                    ],
                   ),
                 ),
               ),
-              title: Text(
-                user.userName,
-                style: TextStyle(color: constColor.magentacolor),
-              ),
-              subtitle: Text(user.phoneNumber),
-            );
-          },
+            ),
+          ],
         ),
       ),
     );

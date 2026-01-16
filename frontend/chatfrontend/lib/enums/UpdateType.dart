@@ -1,0 +1,5 @@
+
+enum UpdateType {
+  EDIT_CHAT_NAME,
+  ADD_PARTICIPANTS
+}

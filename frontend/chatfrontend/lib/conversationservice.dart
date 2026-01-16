@@ -8,6 +8,8 @@ import 'package:chatfrontend/dto/conversation/participantdetails.dart';
 import 'dto/conversation/conversationresponsedto.dart';
 import 'package:http/http.dart' as http;
 
+import 'enums/UpdateType.dart';
+
 class ConversationAPIService {
   static const String conversationUrl =
       "http://192.168.1.74:8082/chat/conversations";
@@ -145,6 +147,36 @@ class ConversationAPIService {
       return [];
     } catch (e) {
       return [];
+    }
+  }
+
+
+  Future<void> updateConversation(
+      String conversationId,
+      String token,
+      String conversationName,
+      List<String> userIds,
+      UpdateType type) async{
+    final url= Uri.parse("$conversationUrl/$conversationId");
+    try{
+      final response= await http.patch(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json'
+        },
+        body: jsonEncode({
+          'conversationName': conversationName,
+          'userIds': userIds,
+          'type': type.name
+        })
+      );
+
+      if (response.statusCode==200){
+
+      }
+    }catch(e){
+      
     }
   }
 }

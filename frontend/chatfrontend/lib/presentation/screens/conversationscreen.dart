@@ -86,7 +86,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
           padding: const EdgeInsets.only(top: 30),
           child: Text(
             "CONVERSATIONS",
-            style: TextStyle(color: constants.cyancolor),
+            style: TextStyle(color: constants.cyancolor, fontSize: 20),
           ),
         ),
       ),
