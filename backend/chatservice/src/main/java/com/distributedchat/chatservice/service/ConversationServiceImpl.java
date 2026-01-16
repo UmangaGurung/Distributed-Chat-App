@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.distributedchat.chatservice.component.MessageEncryption;
 import com.distributedchat.chatservice.component.redis.RedisCaching;
 import com.distributedchat.chatservice.model.dto.UserDetailGrpcDTO;
 import com.distributedchat.chatservice.model.dto.Conversation.ConversationDetailsListDTO;
@@ -29,13 +30,18 @@ import jakarta.transaction.Transactional;
 @Transactional
 public class ConversationServiceImpl implements ConversationService {
 
-	ConversationDAO conversationDAO;
-	RedisCaching redisCaching;
+	private ConversationDAO conversationDAO;
+	private RedisCaching redisCaching;
+	private MessageEncryption messageEncryption;
 	
-	public ConversationServiceImpl(ConversationDAO conversationDAO, RedisCaching redisCaching) {
+	public ConversationServiceImpl(
+			ConversationDAO conversationDAO,
+			RedisCaching redisCaching,
+			MessageEncryption messageEncryption) {
 		// TODO Auto-generated constructor stub
 		this.conversationDAO= conversationDAO;
 		this.redisCaching= redisCaching;
+		this.messageEncryption= messageEncryption;
 	}
 	
 	@Override
@@ -197,6 +203,9 @@ public class ConversationServiceImpl implements ConversationService {
 		
 		for (MessageResponseDTO m: allMessages) {
 			UserDetailGrpcDTO userDetails= userDetailMap.get(m.getSenderId());
+			
+			String decryptedMessage= messageEncryption.decryptMessage(m.getMessage());
+			m.setMessage(decryptedMessage);
 			
 			ConvoMessageDTO messageDTO= new ConvoMessageDTO();
 			messageDTO.setMessageResponse(m);
