@@ -28,19 +28,19 @@ class MessageBubble extends StatelessWidget {
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        margin: EdgeInsets.symmetric(vertical: 4, horizontal: 8),  // Spacing
-        padding: EdgeInsets.all(8),  // Internal padding
+        margin: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+        padding: EdgeInsets.all(8),
         constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.7,  // ← Key fix!
+          maxWidth: MediaQuery.of(context).size.width * 0.7,
         ),
         decoration: BoxDecoration(
           border: Border.all(
             color: isMe ? constColor.magentacolor : constColor.cyancolor,
           ),
-          borderRadius: BorderRadius.circular(12),  // Rounded corners
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
-          mainAxisSize: MainAxisSize.min,  // ← Also important!
+          mainAxisSize: MainAxisSize.min,
           children: isMe
             ?[
           Flexible(

@@ -1,31 +1,33 @@
 import 'package:chatfrontend/dto/message/messagedetailsdto.dart';
 import 'package:chatfrontend/presentation/providers/chatmessagestate.dart';
 import 'package:chatfrontend/presentation/providers/tokenprovider.dart';
+import 'package:chatfrontend/presentation/providers/typingeventstate.dart';
 import 'package:chatfrontend/socketservice.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 
-final socketService= Provider<SocketService>((ref){
-  final tokenAsync= ref.watch(tokenProvider);
+final socketService = Provider<SocketService>((ref) {
+  final tokenAsync = ref.watch(tokenProvider);
 
-  ChatMessageState chatMessageState= ref.watch(messageProvider.notifier);
-  final socket= SocketService(chatMessageState);
+  ChatMessageState chatMessageState = ref.watch(messageProvider.notifier);
+  TypingEventState typingEventState = ref.watch(eventProvider.notifier);
+  final socket = SocketService(chatMessageState, typingEventState);
 
-  tokenAsync.whenData((token){
+  tokenAsync.whenData((token) {
     print("TOKEN CHECK AT SOCKET PROVIDER $token");
-    if (token!=null && !JwtDecoder.isExpired(token)){
+    if (token != null && !JwtDecoder.isExpired(token)) {
       if (!socket.isConnected) {
         final claims = JwtDecoder.decode(token);
         print("Connecting STOMP for user: ${claims['sub']}");
         socket.connectToWebSocket(token, claims['sub']);
       }
-    }else{
+    } else {
       print("Connecting Refused");
       socket.disconnectConnection();
     }
   });
 
-  ref.onDispose((){
+  ref.onDispose(() {
     print("SocketService disposed");
     socket.disconnectConnection();
   });
@@ -33,7 +35,12 @@ final socketService= Provider<SocketService>((ref){
   return socket;
 });
 
-final messageProvider=
-    NotifierProvider<ChatMessageState, Map<String, List<MessageDetailsDTO>>>((){
-    return ChatMessageState();
-});
+final messageProvider =
+    NotifierProvider<ChatMessageState, Map<String, List<MessageDetailsDTO>>>(() {
+        return ChatMessageState();
+    });
+
+final eventProvider =
+    NotifierProvider<TypingEventState, Map<String, Map<String, String>>>(() {
+      return TypingEventState();
+    });

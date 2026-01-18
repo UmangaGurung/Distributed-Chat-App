@@ -12,10 +12,12 @@ import 'package:pixelarticons/pixel.dart';
 class ChatMembers extends ConsumerStatefulWidget {
   final List<String> userIdList;
   final String conversationType;
+  final String conversationAdmin;
 
   const ChatMembers({
     required this.userIdList,
     required this.conversationType,
+    required this.conversationAdmin,
     super.key,
   });
 
@@ -28,6 +30,8 @@ class _ChatMembersState extends ConsumerState<ChatMembers> {
   final UserAPIService userAPIService = UserAPIService();
 
   late final TokenService tokenService;
+  late final String userId;
+
   List<ParticipantDetails> userDetailsList = [];
 
   bool hasLoaded = false;
@@ -37,6 +41,7 @@ class _ChatMembersState extends ConsumerState<ChatMembers> {
     // TODO: implement initState
     super.initState();
     tokenService = ref.read(tokenProvider.notifier);
+    userId= tokenService.tokenDecode()['sub'];
     print(widget.userIdList);
     getUserDetails();
   }
@@ -59,7 +64,6 @@ class _ChatMembersState extends ConsumerState<ChatMembers> {
         .where((id) => id != user['userId'])
         .toList();
 
-    print("Token Id ${user['userId']}");
     switch (widget.conversationType) {
       case 'GROUP':
         Set<String> expiredUserIds = await hiveUserService.isExpiredBulkCheck(
@@ -190,7 +194,8 @@ class _ChatMembersState extends ConsumerState<ChatMembers> {
               ),
             ),
             const SizedBox(height: 25,),
-            if (widget.conversationType=='GROUP')
+            if (widget.conversationType=='GROUP'
+                && widget.conversationAdmin==userId)
             ClipPath(
               clipper: InitiateChatButton(),
               child: GestureDetector(

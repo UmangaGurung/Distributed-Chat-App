@@ -31,6 +31,7 @@ class ChatMessageState extends Notifier<Map<String, List<MessageDetailsDTO>>> {
 
   void addNewMessages(MessageDetailsDTO message) {
     final conversationId = message.messageResponseDTO.conversationId;
+    print(conversationId);
 
     final existingMessages = state[conversationId] ?? const [];
 
@@ -38,6 +39,7 @@ class ChatMessageState extends Notifier<Map<String, List<MessageDetailsDTO>>> {
       ...state,
       conversationId: [message, ...existingMessages],
     };
+    print("State Keys ${state.keys.toList()}");
 
     _queue.add(message.messageResponseDTO);
   }

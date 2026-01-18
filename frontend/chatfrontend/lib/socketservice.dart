@@ -3,6 +3,7 @@ import 'package:chatfrontend/dto/message/messagedetailsdto.dart';
 import 'package:chatfrontend/dto/message/messageresponsedto.dart';
 import 'package:chatfrontend/dto/conversation/participantdetails.dart';
 import 'package:chatfrontend/presentation/providers/chatmessagestate.dart';
+import 'package:chatfrontend/presentation/providers/typingeventstate.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
 
 class SocketService {
@@ -15,8 +16,12 @@ class SocketService {
   final Set<String> _seenMessageIds = {};
 
   final ChatMessageState chatMessageState;
+  final TypingEventState typingEventState;
+  dynamic convoIdEvent;
 
-  SocketService(this.chatMessageState);
+  SocketService(this.chatMessageState, this.typingEventState);
+
+  static const String separator= '\u2021';
 
   void connectToWebSocket(String token, String userId) {
     print("connectToWebSocket called");
@@ -52,11 +57,11 @@ class SocketService {
       callback: callback,
     );
 
-    final convoId= '4e0d5c2e-d112-476a-9deb-2af06417559b';
-    stompClient.subscribe(
-        destination: '/topic/event/$convoId',
-        callback: callbackTypingEvent
-    );
+    // final convoId= '4e0d5c2e-d112-476a-9deb-2af06417559b';
+    // stompClient.subscribe(
+    //     destination: '/topic/event/$convoId',
+    //     callback: callbackTypingEvent
+    // );
 
     stompClient.subscribe(
         destination: '/queue/ack/$userId',
@@ -64,6 +69,28 @@ class SocketService {
     );
 
     isSubscribed = true;
+  }
+
+  void subscribeToEvent(String conversationId){
+    if (!isConnected){
+      return;
+    }
+    print("Subscribing to event");
+
+    if (convoIdEvent!=null){
+      unSubscribeToEvent();
+    }
+
+    convoIdEvent= stompClient.subscribe(
+        destination: '/topic/event/$conversationId',
+        callback: callbackTypingEvent
+    );
+  }
+
+  void unSubscribeToEvent(){
+    convoIdEvent(unsubscribeHeaders: <String, String>{});
+    convoIdEvent= null;
+    print("Removed Subscription");
   }
 
   void callback(StompFrame frame) {
@@ -117,7 +144,10 @@ class SocketService {
 
     final body= frame.body;
 
-    print(body);
+    List<String> payload= body!.split(separator);
+    print(payload);
+
+    typingEventState.setTypingEvent(payload);
   }
 
   void callbackSuccessfullySent(StompFrame frame){
