@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 public class RedisEventSubscriber implements MessageListener{
 	
 	private SimpMessagingTemplate messagingTemplate;
+	private static final String seperator= "\u2021";
 	
 	public RedisEventSubscriber(SimpMessagingTemplate messagingTemplate) {
 		// TODO Auto-generated constructor stub
@@ -22,11 +23,13 @@ public class RedisEventSubscriber implements MessageListener{
 		// TODO Auto-generated method stub
 		try {
 			String channelEvent= new String(message.getBody(), StandardCharsets.UTF_8);
-		
-			String[] list= channelEvent.split(":", 3);
+			
+			System.out.println("On Severs:"+channelEvent);
+			String[] list= channelEvent.split(seperator, 4);
+			System.out.println(list[0]);
 			
 			String destination= "/topic/event/"+ list[0];
-			String payload= list[1]+":"+list[2];
+			String payload= channelEvent;
 		
 			messagingTemplate.convertAndSend(
 					destination,

@@ -52,10 +52,12 @@ public class HandShakeInterceptor implements HandshakeInterceptor {
             
             String userId= claims.getSubject();
             Date jwtExp= claims.getExpiration();
+            String imagePath= claims.get("imagepath").toString();
             
             attributes.put("userId", userId);
             attributes.put("exp", jwtExp.getTime());
             attributes.put("tokenId", tokenId);
+            attributes.put("imagePath", imagePath);
         } else {
             System.out.println("No token received");
             attributes.put("userId", null);

@@ -168,11 +168,10 @@ public class ConversationServiceImpl implements ConversationService {
 		UUID conversationId= UUID.fromString(convoId);
 		List<UUID> userIds= conversationUpdateDTO.getUserIds();
 		
-		boolean exists= userIds.stream()
-				.anyMatch(id -> id.equals(userId));
+		userIds.removeIf(id -> id.equals(userId));
 		
-		if (exists) {
-			throw new IllegalArgumentException("Cannot add yourself");
+		if (userIds.isEmpty()) {
+			throw new IllegalArgumentException("List is empty");
 		}
 		
 		return conversationDAO.addParticipants(userId, conversationId, userIds);

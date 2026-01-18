@@ -72,13 +72,13 @@ public class MessageServiceImpl implements MessageService{
 	}
 
 	@Override
-	public void typingEvent(TypingEventDTO eventDTO, String userId) {
+	public void typingEvent(TypingEventDTO eventDTO, String userId, String userImage) {
 		// TODO Auto-generated method stub
 		String conversationId= eventDTO.getConversationId();
 		String event= eventDTO.getEvent();
 		
 		String scriptResult= redisLua.onTyped(conversationId, event, userId);
 		
-		redisEventPublisher.publishTypingEvent(userId, scriptResult, conversationId);
+		redisEventPublisher.publishTypingEvent(userId, scriptResult, conversationId, userImage);
 	}
 }

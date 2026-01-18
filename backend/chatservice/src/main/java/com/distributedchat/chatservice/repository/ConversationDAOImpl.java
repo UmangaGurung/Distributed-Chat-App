@@ -51,7 +51,7 @@ public class ConversationDAOImpl implements ConversationDAO{
 			}
 			entityManager.flush();
 			
-			return conversationDetails(conversation, participants);
+			return conversationDetails(conversation, participants, senderID);
 		}catch(Exception e) {
 			e.printStackTrace();
 			return null;
@@ -79,7 +79,7 @@ public class ConversationDAOImpl implements ConversationDAO{
 			partiList.add(participantId);
 			partiList.add(userId);
 			
-			return conversationDetails(conversation, partiList);	
+			return conversationDetails(conversation, partiList, null);	
 		}catch(NoResultException e) {
 			System.out.println("Convo not found,so creating one");
 			Conversation conversation= new Conversation();
@@ -104,7 +104,7 @@ public class ConversationDAOImpl implements ConversationDAO{
 			partiList.add(participantId);
 			partiList.add(userId);
 			
-			return conversationDetails(conversation, partiList);
+			return conversationDetails(conversation, partiList, null);
 		}catch (Exception e) {
 			e.printStackTrace();
 			return null;
@@ -131,7 +131,10 @@ public class ConversationDAOImpl implements ConversationDAO{
 						.map(ConversationParticipants::getUserId)
 						.collect(Collectors.toList());
 				
-				ConversationResponseDTO responseDTO= conversationDetails(conversation, conversationParticipantsUUID);
+				 UUID adminId= getConversationAdminId(conversation);
+				 
+				ConversationResponseDTO responseDTO= conversationDetails(
+						conversation, conversationParticipantsUUID, adminId);
 				
 				alluserConvos.add(responseDTO);
 			}
@@ -165,7 +168,9 @@ public class ConversationDAOImpl implements ConversationDAO{
 					.map(p -> p.getUserId())
 					.collect(Collectors.toList());
 			
-			return conversationDetails(conversation, participants);
+			UUID adminId= getConversationAdminId(conversation);
+			
+			return conversationDetails(conversation, participants, adminId);
 		}catch(Exception e) {
 			return null;
 		}
@@ -209,7 +214,9 @@ public class ConversationDAOImpl implements ConversationDAO{
 				conversation.getParticipants().add(participant);
 			}
 			
-			return conversationDetails(conversation, participantIds);
+			UUID adminId= getConversationAdminId(conversation);
+			
+			return conversationDetails(conversation, participantIds, adminId);
 		}catch (Exception e) {
 			e.printStackTrace();
 			return null;
@@ -269,15 +276,30 @@ public class ConversationDAOImpl implements ConversationDAO{
 	
 	private ConversationResponseDTO conversationDetails(
 			Conversation conversation,
-			List<UUID> participants) {
+			List<UUID> participants, UUID adminId) {
 		return new ConversationResponseDTO(
 				conversation.getConversationId(), 
 				conversation.getName(), 
 				conversation.getLastMessage(), 
 				participants, 
 				conversation.getUpdatedAt(),
-				conversation.getType()
+				conversation.getType(),
+				adminId
 				);
+	}
+	
+	private UUID getConversationAdminId(Conversation conversation) {
+		if (conversation.getType().equals("BINARY")) {
+			return null;
+		}
+		
+		UUID adminId= conversation.getParticipants().stream()
+				.filter(p -> "ADMIN".equals(p.getRole()))
+				.findAny()
+				.map(i -> i.getUserId())
+				.orElse(null);
+		
+		return adminId;
 	}
 }
 

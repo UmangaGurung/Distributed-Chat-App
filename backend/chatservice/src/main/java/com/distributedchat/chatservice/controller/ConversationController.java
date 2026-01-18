@@ -89,7 +89,7 @@ public class ConversationController {
 			ConversationResponseDTO responseDTO= conversationService.editConversationDetails(conversationUpdateDTO, convoId, userId);
 			
 			return ResponseEntity.status(HttpStatus.OK).body(responseDTO);
-		}else if (conversationUpdateDTO.getType()==UpdateType.ADD_PARTCIPANTS) {
+		}else if (conversationUpdateDTO.getType()==UpdateType.ADD_PARTICIPANTS) {
 			ConversationResponseDTO responseDTO= conversationService.addParticipants(conversationUpdateDTO, convoId, userId);
 			
 			return ResponseEntity.status(HttpStatus.OK).body(responseDTO);
