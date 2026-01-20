@@ -17,7 +17,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:chatfrontend/constants.dart' as constants;
 import 'package:marquee/marquee.dart';
 
-import 'login.dart';
+import 'user/login.dart';
 
 
 class SearchUsers extends ConsumerStatefulWidget {
@@ -152,8 +152,8 @@ class _SearchUsersState extends ConsumerState<SearchUsers> {
                   ),
                 ),
               ),
-              const SizedBox(height: 70),
-              Container(
+              const SizedBox(height: 35),
+              SizedBox(
                 width: contentContainerWidth,
                 height: contentContainerHeight,
                 child: Stack(

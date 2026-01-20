@@ -1,13 +1,13 @@
 import 'package:chatfrontend/loginresult.dart';
 import 'package:chatfrontend/presentation/providers/tokenprovider.dart';
-import 'package:chatfrontend/presentation/screens/addPhoneNumber.dart';
+import 'package:chatfrontend/presentation/screens/chat/addPhoneNumber.dart';
 import 'package:chatfrontend/presentation/screens/chatscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:chatfrontend/constants.dart' as constants;
 import 'package:chatfrontend/userapiservice.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../googleregisterresponse.dart';
+import '../../../googleregisterresponse.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});

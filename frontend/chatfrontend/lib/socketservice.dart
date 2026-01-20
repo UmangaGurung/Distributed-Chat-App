@@ -57,11 +57,10 @@ class SocketService {
       callback: callback,
     );
 
-    // final convoId= '4e0d5c2e-d112-476a-9deb-2af06417559b';
-    // stompClient.subscribe(
-    //     destination: '/topic/event/$convoId',
-    //     callback: callbackTypingEvent
-    // );
+    stompClient.subscribe(
+        destination: '/topic/event/$userId',
+        callback: callback
+    );
 
     stompClient.subscribe(
         destination: '/queue/ack/$userId',
@@ -71,6 +70,9 @@ class SocketService {
     isSubscribed = true;
   }
 
+  void newConversationEvent(StompFrame frame){
+
+  }
   void subscribeToEvent(String conversationId){
     if (!isConnected){
       return;

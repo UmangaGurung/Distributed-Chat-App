@@ -1,16 +1,16 @@
 import 'package:chatfrontend/googleregisterresponse.dart';
 import 'package:chatfrontend/loginresult.dart';
 import 'package:chatfrontend/presentation/providers/tokenprovider.dart';
-import 'package:chatfrontend/presentation/screens/addPhoneNumber.dart';
-import 'package:chatfrontend/presentation/screens/register2.dart';
+import 'package:chatfrontend/presentation/screens/chat/addPhoneNumber.dart';
+import 'package:chatfrontend/presentation/screens/user/register2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:chatfrontend/constants.dart' as constants;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../registerresponse.dart';
-import '../../userapiservice.dart';
-import 'chatscreen.dart';
+import '../../../registerresponse.dart';
+import '../../../userapiservice.dart';
+import '../chatscreen.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
