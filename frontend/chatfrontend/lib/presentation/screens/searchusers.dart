@@ -17,6 +17,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:chatfrontend/constants.dart' as constants;
 import 'package:marquee/marquee.dart';
 
+import 'chatscreentest.dart';
 import 'user/login.dart';
 
 
@@ -28,9 +29,11 @@ class SearchUsers extends ConsumerStatefulWidget {
 }
 
 class _SearchUsersState extends ConsumerState<SearchUsers> {
+  final ConversationAPIService conversationService= ConversationAPIService();
+  late final TokenService tokenService;
+
   Timer? _debounce;
   final userService = UserAPIService();
-  late SocketService socket;
 
   List<String>? userInfo;
   String? imageUrl;
@@ -45,7 +48,7 @@ class _SearchUsersState extends ConsumerState<SearchUsers> {
   @override
   void initState() {
     super.initState();
-    socket = ref.read(socketService);
+    tokenService= ref.read(tokenProvider.notifier);
   }
 
   void onSearchChanged(String search) {
@@ -59,18 +62,14 @@ class _SearchUsersState extends ConsumerState<SearchUsers> {
     }
 
     _debounce = Timer(Duration(milliseconds: 300), () async {
-        final authService= ref.read(tokenProvider.notifier);
-        print(socket.isSubscribed);
-        print(socket.isConnected);
-
-        if (!authService.isAuthenticated){
+        if (!tokenService.isAuthenticated){
           if (mounted) {
-            await ifTokenIsInvalid(context, authService);
+            await ifTokenIsInvalid(context, tokenService);
           }
           return;
         }
 
-        final token= await ref.read(tokenProvider.future);
+        final token= tokenService.token;
 
         final result = await userService.searchUsers(token, search);
 
@@ -268,21 +267,19 @@ class _SearchUsersState extends ConsumerState<SearchUsers> {
                               clipper: InitiateChatButton(),
                               child: GestureDetector(
                                 onTap: () async {
-                                  final conversationService= ConversationAPIService();
-
-                                  final authService= ref.read(tokenProvider.notifier);
-                                  if (!authService.isAuthenticated){
+                                  if (!tokenService.isAuthenticated){
                                     if (mounted) {
-                                      await ifTokenIsInvalid(context, authService);
+                                      await ifTokenIsInvalid(context, tokenService);
                                     }
                                     return;
                                   }
-                                  final token= await ref.read(tokenProvider.future);
+
+                                  final token= tokenService.token;
                                   
-                                  final convoUserDetails= await conversationService.createOrFindConversation(
+                                  final conversation= await conversationService.createOrFindConversation(
                                       token, userId!);
                              
-                                  if (convoUserDetails == null) {
+                                  if (conversation == null) {
                                     if (!mounted){
                                       return;
                                     }
@@ -291,8 +288,14 @@ class _SearchUsersState extends ConsumerState<SearchUsers> {
                                     );
                                     return;
                                   }
-                                  
-                                  print(convoUserDetails);
+
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          ChatscreenTest(conversation: conversation),
+                                    ),
+                                  );
                                 },
                                 child: Container(
                                   height:

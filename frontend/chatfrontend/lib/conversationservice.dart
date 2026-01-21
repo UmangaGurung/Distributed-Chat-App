@@ -45,6 +45,7 @@ class ConversationAPIService {
         );
       }
     } catch (e) {
+      print(e);
       return null;
     }
     return null;

@@ -220,8 +220,7 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
                   }
 
                   if (latestEvent.isNotEmpty && index == 0) {
-                    List<String> values = latestEvent.values
-                        .toList()
+                    List<String> values = latestEvent.values.toList()
                         .map((img) => img.split(separator).first)
                         .toList();
                     print("here $values");
@@ -231,8 +230,6 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
                       }
                       return img;
                     }).toList();
-
-                    print("local images $images");
 
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4),

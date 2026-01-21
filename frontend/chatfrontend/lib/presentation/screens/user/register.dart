@@ -1,7 +1,7 @@
 import 'package:chatfrontend/googleregisterresponse.dart';
 import 'package:chatfrontend/loginresult.dart';
 import 'package:chatfrontend/presentation/providers/tokenprovider.dart';
-import 'package:chatfrontend/presentation/screens/chat/addPhoneNumber.dart';
+import 'package:chatfrontend/presentation/screens/user/addPhoneNumber.dart';
 import 'package:chatfrontend/presentation/screens/user/register2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

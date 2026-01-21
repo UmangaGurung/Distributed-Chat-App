@@ -32,14 +32,14 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     // TODO: implement initState
     super.initState();
     tokenService = ref.read(tokenProvider.notifier);
-    final claims= tokenService.tokenDecode();
-    userId= claims['sub'];
+    final claims = tokenService.tokenDecode();
+    userId = claims['sub'];
     _loadAllConversations();
   }
 
   Future<void> _loadAllConversations() async {
     if (!tokenService.isAuthenticated) {
-      if (!mounted){
+      if (!mounted) {
         return;
       }
       await ifTokenIsInvalid(context, tokenService);
@@ -59,20 +59,65 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     });
   }
 
-  TextStyle latestMessageColor(double i){
+  TextStyle latestMessageColor(double i) {
     return TextStyle(
-      color: constants.magentacolor.withValues(alpha: i), fontSize: 10,
+      color: constants.magentacolor.withValues(alpha: i),
+      fontSize: 10,
     );
+  }
+
+  List<dynamic> _extractConversationDetails(
+    ConversationAndUserDetailsDTO conversation,
+    List<MessageDetailsDTO> latestMessageState,
+  ) {
+    final excludedUserMessages =
+        latestMessageState
+            .where((m) => m.messageResponseDTO.senderId != userId)
+            .toList();
+
+    List<dynamic> extractedDetails = [];
+    if (latestMessageState.isEmpty) {
+      extractedDetails.add(conversation.conversationResponseDTO.lastMessage);
+      extractedDetails.add('');
+      extractedDetails.add(latestMessageColor(0.5));
+      extractedDetails.add(conversation.conversationResponseDTO.updatedAt);
+    } else if (excludedUserMessages.isNotEmpty &&
+        excludedUserMessages.length > 1) {
+      extractedDetails.add("New Messages");
+      extractedDetails.add(excludedUserMessages.length.toString());
+      extractedDetails.add(latestMessageColor(1));
+      extractedDetails.add(
+        excludedUserMessages.first.messageResponseDTO.createdAtFormatted,
+      );
+    } else if (excludedUserMessages.isNotEmpty &&
+        excludedUserMessages.length == 1) {
+      final messageDTO = excludedUserMessages.first;
+      extractedDetails.add(messageDTO.messageResponseDTO.message);
+      extractedDetails.add(excludedUserMessages.length.toString());
+      extractedDetails.add(latestMessageColor(1));
+      extractedDetails.add(messageDTO.messageResponseDTO.createdAtFormatted);
+    } else {
+      extractedDetails.add(latestMessageState.first.messageResponseDTO.message);
+      extractedDetails.add('');
+      extractedDetails.add(latestMessageColor(0.5));
+      extractedDetails.add(conversation.conversationResponseDTO.updatedAt);
+    }
+
+    return extractedDetails;
   }
 
   @override
   Widget build(BuildContext context) {
-    final messageService= ref.watch(messageProvider);
+    final messageState = ref.watch(messageProvider);
+    final conversationState = ref.watch(conversationProvider);
+    final conversationStateList = conversationState.values.toList();
 
     if (isLoading) {
       return const Scaffold(
         backgroundColor: constants.blackcolor,
-        body: Center(child: CircularProgressIndicator(color: constants.magentacolor)),
+        body: Center(
+          child: CircularProgressIndicator(color: constants.magentacolor),
+        ),
       );
     }
 
@@ -95,164 +140,177 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
           child: Column(
             children: [
               SizedBox(height: 25),
-              ...List.generate(conversationList.length, (index) {
-                final conversation = conversationList[index];
-                final convoId= conversation.conversationResponseDTO.conversationID;
+              ...List.generate(
+                conversationList.length + conversationStateList.length,
+                (index) {
+                  late final ConversationAndUserDetailsDTO conversation;
+                  late final String conversationId;
 
-                final latestMessageState= messageService[convoId];
+                  late final List<MessageDetailsDTO> latestMessageState;
 
-                final excludedUserMessages= latestMessageState?.where(
-                    (m)=> m.messageResponseDTO.senderId!=userId
-                ).toList() ?? [];
+                  String latestMessage;
+                  String messageCount;
+                  TextStyle messageStyle;
+                  String messageDate;
 
-                String messageDate;
-                String latestMessage;
-                String messageCount;
-                TextStyle messageStyle;
+                  if (conversationStateList.isNotEmpty &&
+                      index < conversationStateList.length) {
+                    conversation = conversationStateList[index];
+                    conversationId = conversation.conversationResponseDTO.conversationID;
 
-                if (latestMessageState==null || latestMessageState.isEmpty){
-                  latestMessage= conversation.conversationResponseDTO.lastMessage;
-                  messageCount= '';
-                  messageStyle= latestMessageColor(0.5);
-                  messageDate= conversation.conversationResponseDTO.updatedAt;
-                } else if (excludedUserMessages.isNotEmpty && excludedUserMessages.length>1){
-                  latestMessage= "New Messages";
-                  messageCount= excludedUserMessages.length.toString();
-                  messageStyle= latestMessageColor(1);
-                  messageDate= excludedUserMessages.first.messageResponseDTO.createdAtFormatted;
-                } else if (excludedUserMessages.isNotEmpty && excludedUserMessages.length==1){
-                  final messageDTO= excludedUserMessages.first;
-                  latestMessage= messageDTO.messageResponseDTO.message;
-                  messageCount= excludedUserMessages.length.toString();
-                  messageStyle= latestMessageColor(1);
-                  messageDate= messageDTO.messageResponseDTO.createdAtFormatted;
-                } else {
-                  latestMessage= latestMessageState.first.messageResponseDTO.message;
-                  messageCount= '';
-                  messageStyle= latestMessageColor(0.5);
-                  messageDate= conversation.conversationResponseDTO.updatedAt;
-                }
+                    latestMessageState = messageState[conversationId] ?? [];
 
-                return InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            ChatscreenTest(conversation: conversation),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.only(top: 5, bottom: 5),
-                    padding: const EdgeInsets.all(12.0),
-                    width: double.infinity,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 65,
-                          height: 65,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.grey[300]!,
-                              width: 2,
+                    List<dynamic> extractedDetails =
+                        _extractConversationDetails(
+                          conversation,
+                          latestMessageState,
+                        );
+
+                    latestMessage = extractedDetails.elementAt(0);
+                    messageCount = extractedDetails.elementAt(1);
+                    messageStyle = extractedDetails.elementAt(2);
+                    messageDate = extractedDetails.elementAt(3);
+                  } else {
+                    final fromApi = index - conversationState.length;
+                    conversation = conversationList[fromApi];
+                    conversationId =
+                        conversation.conversationResponseDTO.conversationID;
+
+                    latestMessageState = messageState[conversationId] ?? [];
+
+                    List<dynamic> extractedDetails =
+                        _extractConversationDetails(
+                          conversation,
+                          latestMessageState,
+                        );
+
+                    latestMessage = extractedDetails.elementAt(0);
+                    messageCount = extractedDetails.elementAt(1);
+                    messageStyle = extractedDetails.elementAt(2);
+                    messageDate = extractedDetails.elementAt(3);
+                  }
+
+                  return InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              ChatscreenTest(conversation: conversation),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(top: 5, bottom: 5),
+                      padding: const EdgeInsets.all(12.0),
+                      width: double.infinity,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 65,
+                            height: 65,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.grey[300]!,
+                                width: 2,
+                              ),
+                            ),
+                            child: ClipOval(
+                              child:
+                                  conversation.conversationResponseDTO.type ==
+                                      "BINARY"
+                                  ? Image.network(
+                                      conversation
+                                          .participantDetailsDTO!
+                                          .photoUrl,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Image.asset(
+                                      "assets/icon/logo.png",
+                                      fit: BoxFit.cover,
+                                    ),
                             ),
                           ),
-                          child: ClipOval(
-                            child:
-                                conversation.conversationResponseDTO.type ==
-                                    "BINARY"
-                                ? Image.network(
-                                    conversation
-                                        .participantDetailsDTO!
-                                        .photoUrl,
-                                    fit: BoxFit.cover,
-                                  )
-                                : Image.asset(
-                                    "assets/icon/logo.png",
-                                    fit: BoxFit.cover,
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.only(left: 15.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    conversation.conversationResponseDTO.type ==
+                                            "BINARY"
+                                        ? conversation
+                                              .participantDetailsDTO!
+                                              .userName
+                                        : conversation
+                                              .conversationResponseDTO
+                                              .conversationName,
+                                    style: TextStyle(
+                                      color: constants.cyancolor,
+                                      fontSize: 11,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
+                                  SizedBox(height: 20),
+                                  Text(
+                                    latestMessage,
+                                    style: messageStyle,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
-                        Expanded(
-                          child: Container(
+                          Container(
+                            width: 70,
                             padding: const EdgeInsets.only(left: 15.0),
+                            alignment: Alignment.topRight,
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  conversation.conversationResponseDTO.type ==
-                                          "BINARY"
-                                      ? conversation
-                                            .participantDetailsDTO!
-                                            .userName
-                                      : conversation
-                                            .conversationResponseDTO
-                                            .conversationName,
+                                  messageDate,
                                   style: TextStyle(
-                                    color: constants.cyancolor,
-                                    fontSize: 11,
+                                    color: constants.cyancolor.withValues(
+                                      alpha: 0.7,
+                                    ),
+                                    fontSize: 8,
                                   ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                SizedBox(height: 20),
-                                Text(
-                                  latestMessage,
-                                  style: messageStyle,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                                SizedBox(height: 28),
+                                if (messageCount.isNotEmpty)
+                                  Container(
+                                    width: 15,
+                                    height: 15,
+                                    padding: const EdgeInsets.all(3),
+                                    decoration: BoxDecoration(
+                                      color: constants.magentacolor,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      messageCount,
+                                      style: TextStyle(
+                                        color: constants.cyancolor,
+                                        fontSize: 8,
+                                      ),
+                                    ),
+                                  ),
                               ],
                             ),
                           ),
-                        ),
-                        Container(
-                          width: 70,
-                          padding: const EdgeInsets.only(left: 15.0),
-                          alignment: Alignment.topRight,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                messageDate,
-                                style: TextStyle(
-                                  color: constants.cyancolor.withValues(
-                                    alpha: 0.7,
-                                  ),
-                                  fontSize: 8,
-                                ),
-                              ),
-                              SizedBox(height: 28),
-                              if (messageCount.isNotEmpty)
-                                Container(
-                                  width: 15,
-                                  height: 15,
-                                  padding: const EdgeInsets.all(3),
-                                  decoration: BoxDecoration(
-                                    color: constants.magentacolor,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Text(
-                                    messageCount,
-                                    style: TextStyle(
-                                      color: constants.cyancolor,
-                                      fontSize: 8,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              }),
+                  );
+                },
+              ),
             ],
           ),
         ),
