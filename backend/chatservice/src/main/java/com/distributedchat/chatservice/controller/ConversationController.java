@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,11 +38,9 @@ public class ConversationController {
 	
 	@PostMapping("/conversations/groups")
 	public ResponseEntity<Map<String, Object>> createGroupConversation(
-			@RequestBody ConversationGroupDTO conversationGroupDTO){
-		String uid= SecurityContextHolder.getContext()
-						.getAuthentication()
-						.getPrincipal()
-						.toString();
+			@RequestBody ConversationGroupDTO conversationGroupDTO,
+			@AuthenticationPrincipal Map<String, String> userDetails){
+		String uid= userDetails.get("userId");
 		
 		ConversationResponseDTO conversation= conversationService.createGroupConversation(conversationGroupDTO, uid);
 		Map<String, Object> response= new HashMap<>();
@@ -53,23 +51,23 @@ public class ConversationController {
 	
 	@PostMapping("/conversations/direct-messages")
 	public ResponseEntity<ConversationDetailsListDTO> createOrFindConversation(
-			@RequestBody CreateOrFindDTO createOrFindDTO){
-		String uid= SecurityContextHolder.getContext()
-				.getAuthentication()
-				.getPrincipal()
-				.toString();
+			@RequestBody CreateOrFindDTO createOrFindDTO,
+			@AuthenticationPrincipal Map<String, String> userDetail){
+		String userId= userDetail.get("userId");
+		String userName= userDetail.get("userName");
+		String phone= userDetail.get("phone");
+		String photo= userDetail.get("photo");
 		
-		ConversationDetailsListDTO response= conversationService.createOrFindConversation(createOrFindDTO, uid);
+		ConversationDetailsListDTO response= conversationService.createOrFindConversation(
+				createOrFindDTO, userId, userName, phone, photo);
 		
 		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
 	
 	@GetMapping("/conversations")
-	public ResponseEntity<List<ConversationDetailsListDTO>> getConversations(){
-		String uid= SecurityContextHolder.getContext()
-						.getAuthentication()
-						.getPrincipal()
-						.toString();
+	public ResponseEntity<List<ConversationDetailsListDTO>> getConversations(
+			@AuthenticationPrincipal Map<String, String> userDetails){
+		String uid= userDetails.get("userId");
 		
 		List<ConversationDetailsListDTO> allConversations= conversationService.getConversation(uid);
 		
@@ -79,11 +77,9 @@ public class ConversationController {
 	@PatchMapping("/conversations/{conversationId}")
 	private ResponseEntity<ConversationResponseDTO> updateConversation(
 			@PathVariable("conversationId") String convoId,
-			@RequestBody ConversationUpdateDTO conversationUpdateDTO){
-		String userId= SecurityContextHolder.getContext()
-				.getAuthentication()
-				.getPrincipal()
-				.toString();
+			@RequestBody ConversationUpdateDTO conversationUpdateDTO,
+			@AuthenticationPrincipal Map<String, String> userDetails){
+		String userId= userDetails.get("userId");
 		
 		if (conversationUpdateDTO.getType()==UpdateType.EDIT_CHAT_NAME) {
 			ConversationResponseDTO responseDTO= conversationService.editConversationDetails(conversationUpdateDTO, convoId, userId);
@@ -100,12 +96,10 @@ public class ConversationController {
 	@PostMapping("/conversations/{conversationId}/messages")
 	public ResponseEntity<List<ConvoMessageDTO>> getConversationMessages(
 			@PathVariable("conversationId") String convoId,
-			@RequestBody MessagePaginationDTO messagePaginationDTO){
-		String userId= SecurityContextHolder.getContext()
-				.getAuthentication()
-				.getPrincipal()
-				.toString();
-		
+			@RequestBody MessagePaginationDTO messagePaginationDTO,
+			@AuthenticationPrincipal Map<String, String> userDetails){
+		String userId= userDetails.get("userId");
+				
 		List<ConvoMessageDTO> allMessages= conversationService.getAllConversationMessages(convoId, userId, messagePaginationDTO);
 		
 		return ResponseEntity.status(HttpStatus.OK).body(allMessages);

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import com.distributedchat.chatservice.component.MessageEncryption;
 import com.distributedchat.chatservice.component.redis.RedisCaching;
+import com.distributedchat.chatservice.component.redis.RedisNewConversationEventPublisher;
 import com.distributedchat.chatservice.model.dto.UserDetailGrpcDTO;
 import com.distributedchat.chatservice.model.dto.Conversation.ConversationDetailsListDTO;
 import com.distributedchat.chatservice.model.dto.Conversation.ConversationGroupDTO;
@@ -33,15 +34,18 @@ public class ConversationServiceImpl implements ConversationService {
 	private ConversationDAO conversationDAO;
 	private RedisCaching redisCaching;
 	private MessageEncryption messageEncryption;
+	private RedisNewConversationEventPublisher conversationEventPublisher;
 	
 	public ConversationServiceImpl(
 			ConversationDAO conversationDAO,
 			RedisCaching redisCaching,
-			MessageEncryption messageEncryption) {
+			MessageEncryption messageEncryption,
+			RedisNewConversationEventPublisher conversationEventPublisher) {
 		// TODO Auto-generated constructor stub
 		this.conversationDAO= conversationDAO;
 		this.redisCaching= redisCaching;
 		this.messageEncryption= messageEncryption;
+		this.conversationEventPublisher= conversationEventPublisher;
 	}
 	
 	@Override
@@ -64,7 +68,8 @@ public class ConversationServiceImpl implements ConversationService {
 	}
 	
 	@Override
-	public ConversationDetailsListDTO createOrFindConversation(CreateOrFindDTO createOrFindDTO, String uid) {
+	public ConversationDetailsListDTO createOrFindConversation(
+			CreateOrFindDTO createOrFindDTO, String uid, String userName, String phone, String photo) {
 		// TODO Auto-generated method stub
 		UUID userId= UUID.fromString(uid);
 		UUID participantId= createOrFindDTO.getParticipantId();
@@ -74,10 +79,19 @@ public class ConversationServiceImpl implements ConversationService {
 			throw new IllegalArgumentException("No Convo here");
 		}
 		
-		ConversationResponseDTO responseDTO= conversationDAO.createOrFindConversation(userId, participantId, type);
+		Map<ConversationResponseDTO, Boolean> result= conversationDAO.createOrFindConversation(userId, participantId, type);
 
 		UserDetailGrpcDTO userDetails= redisCaching.cacheUserInfo(participantId);
-	
+		
+		ConversationResponseDTO responseDTO= result.keySet().stream().findFirst().get();
+		boolean operationType= result.get(responseDTO);
+		
+		if (operationType) {
+			responseDTO.setConversationName(userName);
+			conversationEventPublisher.publishNewConversation(
+					new ConversationDetailsListDTO(responseDTO, new UserDetailGrpcDTO(userId, userName, photo, phone)));
+		}
+		
 		responseDTO.setConversationName(userDetails.getUserName());
 		
 		ConversationDetailsListDTO conversationDetailsListDTO= 
@@ -114,14 +128,20 @@ public class ConversationServiceImpl implements ConversationService {
 		}
 		
 		for (ConversationResponseDTO conversationResponseDTO: allConversations) {
+			if (conversationResponseDTO.getLastMessage()!=null) {
+			 String decryptedText= messageEncryption.decryptMessage(conversationResponseDTO.getLastMessage());
+			 conversationResponseDTO.setLastMessage(decryptedText);
+			}
+			
 			if (conversationResponseDTO.getType().equals("BINARY")) {
 				UserDetailGrpcDTO userDetail= mappedUserDetails.get(conversationResponseDTO.getParticipantID()
 						.stream()
 						.filter(id -> !id.equals(userId))
 						.findFirst()
 						.orElseThrow());
-						
+				
 				conversationResponseDTO.setConversationName(userDetail.getUserName());
+				
 				allConvoDetails.add(
 						new ConversationDetailsListDTO(
 								conversationResponseDTO, 

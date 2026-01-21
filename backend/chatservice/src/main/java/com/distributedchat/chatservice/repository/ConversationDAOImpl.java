@@ -1,7 +1,9 @@
 package com.distributedchat.chatservice.repository;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -59,7 +61,7 @@ public class ConversationDAOImpl implements ConversationDAO{
 	}
 	
 	@Override
-	public ConversationResponseDTO createOrFindConversation(UUID userId, UUID participantId, String type) {
+	public Map<ConversationResponseDTO, Boolean> createOrFindConversation(UUID userId, UUID participantId, String type) {
 		// TODO Auto-generated method stub
 		try {
 			TypedQuery<Conversation> query= entityManager.createQuery(
@@ -79,7 +81,10 @@ public class ConversationDAOImpl implements ConversationDAO{
 			partiList.add(participantId);
 			partiList.add(userId);
 			
-			return conversationDetails(conversation, partiList, null);	
+			Map<ConversationResponseDTO, Boolean> result= new HashMap<>();
+			result.put(conversationDetails(conversation, partiList, null), false);
+			
+			return result;
 		}catch(NoResultException e) {
 			System.out.println("Convo not found,so creating one");
 			Conversation conversation= new Conversation();
@@ -104,7 +109,10 @@ public class ConversationDAOImpl implements ConversationDAO{
 			partiList.add(participantId);
 			partiList.add(userId);
 			
-			return conversationDetails(conversation, partiList, null);
+			Map<ConversationResponseDTO, Boolean> result= new HashMap<>();
+			result.put(conversationDetails(conversation, partiList, null), true);
+			
+			return result;
 		}catch (Exception e) {
 			e.printStackTrace();
 			return null;
