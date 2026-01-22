@@ -21,6 +21,7 @@ import com.distributedchat.chatservice.model.dto.Conversation.ConversationRespon
 import com.distributedchat.chatservice.model.dto.Conversation.ConversationUpdateDTO;
 import com.distributedchat.chatservice.model.dto.Conversation.ConvoMessageDTO;
 import com.distributedchat.chatservice.model.dto.Conversation.CreateOrFindDTO;
+import com.distributedchat.chatservice.model.dto.Message.LatestMessageDTO;
 import com.distributedchat.chatservice.model.dto.Message.MessagePaginationDTO;
 import com.distributedchat.chatservice.model.dto.Message.MessageResponseDTO;
 import com.distributedchat.chatservice.repository.ConversationDAO;
@@ -92,7 +93,9 @@ public class ConversationServiceImpl implements ConversationService {
 					new ConversationDetailsListDTO(responseDTO, new UserDetailGrpcDTO(userId, userName, photo, phone)));
 		}
 		
+		String decryptedMessage= messageEncryption.decryptMessage(responseDTO.getLastMessage());
 		responseDTO.setConversationName(userDetails.getUserName());
+		responseDTO.setLastMessage(decryptedMessage);
 		
 		ConversationDetailsListDTO conversationDetailsListDTO= 
 				new ConversationDetailsListDTO(responseDTO, userDetails);
@@ -233,5 +236,38 @@ public class ConversationServiceImpl implements ConversationService {
 			allMessageDTOs.add(messageDTO);
 		}
 		return allMessageDTOs;
+	}
+
+	@Override
+	public List<ConvoMessageDTO> getLatestMessages(String convoId, String userId, LatestMessageDTO latestMessageDTO) {
+		// TODO Auto-generated method stub
+		UUID conversationId= UUID.fromString(convoId);
+		UUID uId= UUID.fromString(userId);
+		
+		List<MessageResponseDTO> messageList= conversationDAO.getLatestMessages(conversationId, uId, latestMessageDTO);
+		
+		System.out.println(messageList);
+		List<UUID> userIdList= messageList.stream()
+				.map(m -> m.getSenderId())
+				.distinct()
+				.collect(Collectors.toList());
+		
+		List<UserDetailGrpcDTO> userDetails= redisCaching.cacheListOfUserInfo(userIdList);
+		Map<UUID, UserDetailGrpcDTO> userDetailMap= new HashMap<>();
+		
+		for (UserDetailGrpcDTO userDetail: userDetails) {
+			userDetailMap.put(userDetail.getUserId(), userDetail);
+		}
+		
+		List<ConvoMessageDTO> result= new ArrayList<>();
+		for (MessageResponseDTO messageResponseDTO: messageList) {
+			String decryptedText= messageEncryption.decryptMessage(messageResponseDTO.getMessage());
+			messageResponseDTO.setMessage(decryptedText);
+			
+			UserDetailGrpcDTO userDetail= userDetailMap.get(messageResponseDTO.getSenderId());
+			
+			result.add(new ConvoMessageDTO(messageResponseDTO, userDetail));
+		}
+		return result;
 	}
 }

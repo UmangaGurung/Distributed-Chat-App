@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import com.distributedchat.chatservice.component.UserGrpcClient;
 import com.distributedchat.chatservice.model.dto.Conversation.ConversationResponseDTO;
+import com.distributedchat.chatservice.model.dto.Message.LatestMessageDTO;
 import com.distributedchat.chatservice.model.dto.Message.MessagePaginationDTO;
 import com.distributedchat.chatservice.model.dto.Message.MessageResponseDTO;
 import com.distributedchat.chatservice.model.entity.Conversation;
@@ -281,6 +282,43 @@ public class ConversationDAOImpl implements ConversationDAO{
 			return null;
 		}
 	}
+
+	@Override
+	public List<MessageResponseDTO> getLatestMessages(UUID convoId, UUID userId, LatestMessageDTO latestMessageDTO) {
+		// TODO Auto-generated method stub
+		System.out.println("Inside dao");
+		try {
+			Conversation conversation= entityManager.find(Conversation.class, convoId);
+			
+			boolean exists= conversation.getParticipants().stream()
+					.anyMatch(p -> p.getUserId().equals(userId));
+			
+			if (!exists) {
+				throw new SecurityException();
+			}
+			
+			TypedQuery<MessageResponseDTO> query= entityManager.createQuery(
+					"SELECT new com.distributedchat.chatservice.model.dto.Message.MessageResponseDTO("
+					+ "m.conversation.conversationId, m.messageId, "
+					+ "m.message, m.type, "
+					+ "m.senderId, m.createdAt) "
+					+ "FROM Message m WHERE m.conversation.conversationId=:convoId "
+					+ "AND (m.createdAt > :timeStamp OR (m.createdAt=:timeStamp AND m.messageId > :messageId)) "
+					+ "ORDER BY m.createdAt DESC", MessageResponseDTO.class)
+					.setParameter("convoId", convoId)
+					.setParameter("timeStamp", latestMessageDTO.getTimeStamp())
+					.setParameter("messageId", latestMessageDTO.getMessageId());
+			
+			System.out.println("Inside dao");
+			System.out.println(query.getResultList());
+			
+			return query.getResultList();
+		}catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		}
+		return null;
+	}
 	
 	private ConversationResponseDTO conversationDetails(
 			Conversation conversation,
@@ -288,7 +326,8 @@ public class ConversationDAOImpl implements ConversationDAO{
 		return new ConversationResponseDTO(
 				conversation.getConversationId(), 
 				conversation.getName(), 
-				conversation.getLastMessage(), 
+				conversation.getLastMessage(),
+				conversation.getLastMessageId(),
 				participants, 
 				conversation.getUpdatedAt(),
 				conversation.getType(),

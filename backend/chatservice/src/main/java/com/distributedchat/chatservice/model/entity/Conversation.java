@@ -42,6 +42,9 @@ public class Conversation {
 	@Column
 	private String lastMessage;
 	
+	@Column
+	private UUID lastMessageId;
+	
 	@OneToMany(mappedBy = "conversation", cascade = CascadeType.ALL, 
 			orphanRemoval = true, fetch = FetchType.LAZY)
 	@JsonIgnore
@@ -60,16 +63,25 @@ public class Conversation {
 	}
 	
 	public Conversation(String name, @Pattern(regexp = "GROUP|BINARY") String type, List<Message> messages,
-			String lastMessage, List<ConversationParticipants> participants, LocalDateTime createdAt,
+			String lastMessage, UUID lastMessageId, List<ConversationParticipants> participants, LocalDateTime createdAt,
 			LocalDateTime updatedAt) {
 		super();
 		this.name = name;
 		this.type = type;
 		this.messages = messages;
 		this.lastMessage = lastMessage;
+		this.lastMessageId= lastMessageId;
 		this.participants = participants;
 		this.createdAt = LocalDateTime.now();
 		this.updatedAt = LocalDateTime.now();
+	}
+	
+	public UUID getLastMessageId() {
+		return lastMessageId;
+	}
+
+	public void setLastMessageId(UUID lastMessageId) {
+		this.lastMessageId = lastMessageId;
 	}
 
 	public UUID getConversationId() {

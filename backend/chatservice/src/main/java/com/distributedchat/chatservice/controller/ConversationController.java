@@ -22,6 +22,7 @@ import com.distributedchat.chatservice.model.dto.Conversation.ConversationUpdate
 import com.distributedchat.chatservice.model.dto.Conversation.ConvoMessageDTO;
 import com.distributedchat.chatservice.model.dto.Conversation.CreateOrFindDTO;
 import com.distributedchat.chatservice.model.dto.Conversation.UpdateType;
+import com.distributedchat.chatservice.model.dto.Message.LatestMessageDTO;
 import com.distributedchat.chatservice.model.dto.Message.MessagePaginationDTO;
 import com.distributedchat.chatservice.service.ConversationService;
 
@@ -103,5 +104,17 @@ public class ConversationController {
 		List<ConvoMessageDTO> allMessages= conversationService.getAllConversationMessages(convoId, userId, messagePaginationDTO);
 		
 		return ResponseEntity.status(HttpStatus.OK).body(allMessages);
+	}
+	
+	@PostMapping("/conversations/{conversationId}/messages/latest")
+	public ResponseEntity<List<ConvoMessageDTO>> getLatestMessages(
+			@PathVariable("conversationId") String conversationId,
+			@RequestBody LatestMessageDTO latestMessageDTO,
+			@AuthenticationPrincipal Map<String, String> userDetails){
+		String userId= userDetails.get("userId");
+		
+		List<ConvoMessageDTO> latestMessages= conversationService.getLatestMessages(conversationId, userId, latestMessageDTO);
+		
+		return ResponseEntity.status(HttpStatus.OK).body(latestMessages);
 	}
 }
