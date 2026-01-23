@@ -1,10 +1,10 @@
 local key= KEYS[1]
-local ttl= tonumber(ARGV[1])
+local event= ARGV[1]
 
-if redis.call("EXISTS", key) == 1 then
-	redis.call("EXPIRE", key, ttl)
-	return "ALREADY_TYPING"
-else
-	redis.call("SET", key, 1, "EX", ttl)
-	return "STARTED_TYPING"
+if event=="NOT_TYPING" then
+	redis.call("DEL", key)
+	return event
+elseif event=="TYPING" then
+	redis.call("SET", key, event)
+	return event
 end

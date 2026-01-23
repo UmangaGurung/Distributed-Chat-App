@@ -1,6 +1,5 @@
 package com.distributedchat.chatservice.component.redis;
 
-import java.time.Duration;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -30,10 +29,8 @@ public class RedisLua {
 		String key= "typing:"+conversationId+":"+userId;
 		
 		List<String> keys= List.of(key);
-		Duration ttl = Duration.ofSeconds(4);
-		Object[] args = { String.valueOf(ttl.getSeconds()) };
 	
- 		String scriptResult=(String) redisTemplate.execute(redisScript, keys, args);
+ 		String scriptResult=(String) redisTemplate.execute(redisScript, keys, event);
  		System.out.println(scriptResult);
  		
  		return scriptResult;
