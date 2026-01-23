@@ -39,11 +39,9 @@ final socketService = Provider<SocketService>((ref) {
 });
 
 final messageProvider =
-    NotifierProvider<ChatMessageState, Map<String, List<MessageDetailsDTO>>>(
-      () {
+    NotifierProvider<ChatMessageState, Map<String, List<MessageDetailsDTO>>>(() {
         return ChatMessageState();
-      },
-    );
+    });
 
 final eventProvider =
     NotifierProvider<TypingEventState, Map<String, Map<String, String>>>(() {

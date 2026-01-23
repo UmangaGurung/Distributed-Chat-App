@@ -1,3 +1,4 @@
+import 'package:chatfrontend/presentation/providers/socketprovider.dart';
 import 'package:chatfrontend/presentation/providers/tokenprovider.dart';
 import 'package:chatfrontend/tokenservice.dart';
 import 'package:chatfrontend/userapiservice.dart';
@@ -35,6 +36,9 @@ class _TestThreeState extends ConsumerState<TestThree> {
               await userAPIService.logout(token);
             }
             print(" login out...");
+            ref.invalidate(conversationProvider);
+            ref.invalidate(messageProvider);
+            ref.invalidate(eventProvider);
             await authService.clearToken();
             if (!mounted) return;
             Navigator.pushAndRemoveUntil(

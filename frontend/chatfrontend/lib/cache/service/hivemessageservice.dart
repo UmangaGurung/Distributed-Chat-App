@@ -78,7 +78,7 @@ class HiveMessageService {
     await indexBox.put(conversationId, messageIdMap);
   }
 
-  List<MessageResponseDTO> getMessages(String conversationId, int limitIndex) {
+  List<MessageResponseDTO> getMessages(String conversationId) {
     final messageIdMap = indexBox.get(conversationId) ?? {};
 
     final messageIdList= (messageIdMap['api'] as List).cast<String>();

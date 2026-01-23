@@ -12,10 +12,6 @@ class ConversationState extends Notifier<Map<String, ConversationAndUserDetailsD
   void addNewConversationToState(ConversationAndUserDetailsDTO newConversation){
     final String conversationId= newConversation.conversationResponseDTO.conversationID;
 
-    // if (state.containsKey(conversationId)){
-    //   return;
-    // }
-
     state= {
       ...state,
       conversationId: newConversation

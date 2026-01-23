@@ -59,6 +59,7 @@ class ConversationAPIService {
     int limit,
     bool firstFetch,
   ) async {
+
     print(messageId);
     print(timeStamp);
     print(limit);
@@ -86,7 +87,7 @@ class ConversationAPIService {
         final List<MessageDetailsDTO> messageDetailsList = [];
         print(data);
 
-        data.forEach((message) {
+        for (var message in data) {
           MessageDetailsDTO messageDetailsDTO = MessageDetailsDTO(
             messageResponseDTO: MessageResponseDTO.fromJson(
               message['messageResponse'],
@@ -97,12 +98,49 @@ class ConversationAPIService {
           );
 
           messageDetailsList.add(messageDetailsDTO);
-        });
+        }
 
         return messageDetailsList;
       }
       return [];
     } catch (e) {
+      return [];
+    }
+  }
+
+  Future<List<MessageDetailsDTO>> getLatestMessages(
+      String token, String messageId, String timeStamp, String conversationId) async{
+    final url= Uri.parse("$conversationUrl/$conversationId/messages/latest");
+
+    try{
+      final response= await http.post(
+          url,
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json'
+          },
+          body: jsonEncode({
+            'messageId': messageId,
+            'timeStamp': timeStamp
+          })
+      );
+
+      if (response.statusCode==200){
+        final List<dynamic> data= jsonDecode(response.body);
+        print("Inside convoservice");
+        print(data);
+
+        List<MessageDetailsDTO> messageDetailsList= data.map(
+            (m) => MessageDetailsDTO(
+                    messageResponseDTO: MessageResponseDTO.fromJson(m['messageResponse']),
+                    userDetailsDTO: ParticipantDetails.fromJson(m['senderDetails']))
+        ).toList();
+
+        return messageDetailsList;
+      }
+      return [];
+    }catch(e){
+      print(e);
       return [];
     }
   }

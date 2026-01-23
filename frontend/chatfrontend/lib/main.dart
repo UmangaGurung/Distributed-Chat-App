@@ -21,7 +21,7 @@ void main() async {
   await Hive.openBox('conversationIndex');
   await Hive.openBox<HiveUserModel>('user');
   await Hive.openBox<DateTime>('dataTTL');
-  await inspectHive();
+  //await inspectHive();
   runApp(ProviderScope(child: ChatApp()));
 }
 

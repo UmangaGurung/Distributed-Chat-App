@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:chatfrontend/cache/model/userdetailscache.dart';
 import 'package:chatfrontend/cache/service/hivemessageservice.dart';
@@ -35,7 +34,7 @@ class ChatscreenTest extends ConsumerStatefulWidget {
 }
 
 class _ChatscreenState extends ConsumerState<ChatscreenTest> {
-  static const String separator= '\u2021';
+  static const String separator = '\u2021';
   final ConversationAPIService conversationAPIService =
       ConversationAPIService();
 
@@ -57,6 +56,7 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
   bool isLoading = true;
   bool firstFetch = true;
   bool apiFetch = false;
+  bool updatingHive = false;
 
   Timer? _timer;
   Timer? _typingTimer;
@@ -210,8 +210,17 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
                 itemCount:
                     allMessages.length +
                     (apiFetch ? 1 : 0) +
-                    (latestEvent.isNotEmpty ? latestEvent.length : 0),
+                    (latestEvent.isNotEmpty ? 1 : 0) +
+                    (updatingHive ? 1 : 0),
                 itemBuilder: (context, index) {
+
+                  if (updatingHive && index == 0) {
+                    return const Padding(
+                      padding: EdgeInsetsGeometry.symmetric(vertical: 8),
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+
                   if (apiFetch && index == allMessages.length) {
                     return const Padding(
                       padding: EdgeInsets.symmetric(vertical: 8),
@@ -220,7 +229,8 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
                   }
 
                   if (latestEvent.isNotEmpty && index == 0) {
-                    List<String> values = latestEvent.values.toList()
+                    List<String> values = latestEvent.values
+                        .toList()
                         .map((img) => img.split(separator).first)
                         .toList();
                     print("here $values");
@@ -283,8 +293,9 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
                       ),
                     );
                   }
+
                   int messageIndex =
-                      index - (latestEvent.isNotEmpty ? latestEvent.length : 0);
+                      index - (latestEvent.isNotEmpty ? latestEvent.length : 0) - (updatingHive ? 1 : 0);
                   final message = allMessages[messageIndex];
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
@@ -418,8 +429,7 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
     if (apiFetch) {
       return;
     }
-    print(messageId);
-    print(timeStamp);
+
     setState(() {
       apiFetch = true;
     });
@@ -445,7 +455,7 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
         firstFetch == true) {
       print("Loading messages from hive");
 
-      cachedMessages = hiveMessageService.getMessages(conversationId, 15);
+      cachedMessages = hiveMessageService.getMessages(conversationId);
       final userIdList =
           widget.conversation.conversationResponseDTO.participantId;
       final cachedUserDetails = hiveUserService.getAllCachedUserDetails(
@@ -463,6 +473,26 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
           })
           .whereType<MessageDetailsDTO>()
           .toList();
+
+      if (cachedMessages.first.messageId !=
+          widget.conversation.conversationResponseDTO.lastMessageId) {
+        setMessageState(response);
+        setState(() {
+          updatingHive = true;
+        });
+
+        print(updatingHive);
+        final List<MessageDetailsDTO> latestMessage= await conversationAPIService.getLatestMessages(
+            token, cachedMessages.first.messageId, cachedMessages.first.createdAt, conversationId);
+
+        print(latestMessage);
+        setState(() {
+          messageList= [...latestMessage, ...messageList];
+          updatingHive= false;
+        });
+
+        return;
+      }
     }
 
     if (cachedMessages.isEmpty) {
@@ -512,13 +542,17 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
       await Future.delayed(Duration(milliseconds: 500));
     }
 
+   setMessageState(response);
+  }
+
+  void setMessageState(List<MessageDetailsDTO> response){
     setState(() {
-      messageList = [...messageList, ...response];
-      isLoading = false;
-      if (firstFetch) {
-        firstFetch = false;
+      messageList= [...messageList, ...response];
+      isLoading= false;
+      if(firstFetch) {
+        firstFetch= false;
       }
-      apiFetch = false;
+      apiFetch= false;
     });
   }
 }

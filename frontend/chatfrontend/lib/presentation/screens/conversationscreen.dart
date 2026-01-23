@@ -9,7 +9,6 @@ import 'package:chatfrontend/tokenutil.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:chatfrontend/constants.dart' as constants;
-import 'package:google_fonts/google_fonts.dart';
 
 class ConversationScreen extends ConsumerStatefulWidget {
   const ConversationScreen({super.key});
@@ -70,10 +69,6 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     ConversationAndUserDetailsDTO conversation,
     List<MessageDetailsDTO> latestMessageState,
   ) {
-    final excludedUserMessages =
-        latestMessageState
-            .where((m) => m.messageResponseDTO.senderId != userId)
-            .toList();
 
     List<dynamic> extractedDetails = [];
     if (latestMessageState.isEmpty) {
@@ -81,26 +76,23 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
       extractedDetails.add('');
       extractedDetails.add(latestMessageColor(0.5));
       extractedDetails.add(conversation.conversationResponseDTO.updatedAt);
-    } else if (excludedUserMessages.isNotEmpty &&
-        excludedUserMessages.length > 1) {
-      extractedDetails.add("New Messages");
-      extractedDetails.add(excludedUserMessages.length.toString());
-      extractedDetails.add(latestMessageColor(1));
-      extractedDetails.add(
-        excludedUserMessages.first.messageResponseDTO.createdAtFormatted,
-      );
-    } else if (excludedUserMessages.isNotEmpty &&
-        excludedUserMessages.length == 1) {
-      final messageDTO = excludedUserMessages.first;
-      extractedDetails.add(messageDTO.messageResponseDTO.message);
-      extractedDetails.add(excludedUserMessages.length.toString());
-      extractedDetails.add(latestMessageColor(1));
-      extractedDetails.add(messageDTO.messageResponseDTO.createdAtFormatted);
-    } else {
-      extractedDetails.add(latestMessageState.first.messageResponseDTO.message);
-      extractedDetails.add('');
-      extractedDetails.add(latestMessageColor(0.5));
-      extractedDetails.add(conversation.conversationResponseDTO.updatedAt);
+    } else if (latestMessageState.isNotEmpty) {
+      final String latestMessageSenderId= latestMessageState.first.messageResponseDTO.senderId;
+      final messageDTO= latestMessageState.first.messageResponseDTO;
+
+      if (latestMessageSenderId==userId){
+        extractedDetails.add(messageDTO.message);
+        extractedDetails.add('');
+        extractedDetails.add(latestMessageColor(0.5));
+        extractedDetails.add(messageDTO.createdAtFormatted);
+      }else {
+        extractedDetails.add(latestMessageState.length == 1
+            ? messageDTO.message
+            : 'New Messages');
+        extractedDetails.add(latestMessageState.length.toString());
+        extractedDetails.add(latestMessageColor(1));
+        extractedDetails.add(messageDTO.createdAtFormatted);
+      }
     }
 
     return extractedDetails;
@@ -112,6 +104,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     final conversationState = ref.watch(conversationProvider);
     final conversationStateList = conversationState.values.toList();
 
+
     if (isLoading) {
       return const Scaffold(
         backgroundColor: constants.blackcolor,
@@ -120,6 +113,13 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
         ),
       );
     }
+
+    List<String> convoIdList= conversationState.keys.toList();
+
+    List<ConversationAndUserDetailsDTO> filteredConversationList=
+        conversationList.where(
+            (c) => !convoIdList.contains(c.conversationResponseDTO.conversationID)
+        ).toList();
 
     return Scaffold(
       backgroundColor: constants.blackcolor,
@@ -141,7 +141,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
             children: [
               SizedBox(height: 25),
               ...List.generate(
-                conversationList.length + conversationStateList.length,
+                filteredConversationList.length + conversationStateList.length,
                 (index) {
                   late final ConversationAndUserDetailsDTO conversation;
                   late final String conversationId;
@@ -172,7 +172,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
                     messageDate = extractedDetails.elementAt(3);
                   } else {
                     final fromApi = index - conversationState.length;
-                    conversation = conversationList[fromApi];
+                    conversation = filteredConversationList[fromApi];
                     conversationId =
                         conversation.conversationResponseDTO.conversationID;
 
