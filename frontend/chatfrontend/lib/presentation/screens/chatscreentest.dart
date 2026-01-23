@@ -241,6 +241,8 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
                       return img;
                     }).toList();
 
+                    print("Typing $images");
+
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Align(
@@ -295,7 +297,7 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
                   }
 
                   int messageIndex =
-                      index - (latestEvent.isNotEmpty ? latestEvent.length : 0) - (updatingHive ? 1 : 0);
+                      index - (latestEvent.isNotEmpty ? 1 : 0) - (updatingHive ? 1 : 0);
                   final message = allMessages[messageIndex];
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
@@ -336,7 +338,11 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
                       onChanged: (value) {
                         _timer?.cancel();
 
-                        _timer = Timer(Duration(milliseconds: 3000), () {
+                        _timer = Timer(Duration(milliseconds: 2500), () {
+                          socket.typingEvent(
+                              convoDetails.conversationID,
+                              userId,
+                              'NOT_TYPING');
                           _typingTimer?.cancel();
                           isTyping = false;
                         });
@@ -346,18 +352,7 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
                           socket.typingEvent(
                             convoDetails.conversationID,
                             userId,
-                            'STARTED_TYPING',
-                          );
-
-                          _typingTimer = Timer.periodic(
-                            Duration(milliseconds: 2000),
-                            (Timer timer) {
-                              socket.typingEvent(
-                                convoDetails.conversationID,
-                                userId,
-                                'STILL_TYPING',
-                              );
-                            },
+                            'TYPING',
                           );
                         }
                       },

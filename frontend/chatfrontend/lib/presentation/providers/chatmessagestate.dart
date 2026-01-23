@@ -7,8 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../dto/message/messagedetailsdto.dart';
 
 class ChatMessageState extends Notifier<Map<String, List<MessageDetailsDTO>>> {
-  late final HiveMessageService _hiveMessageService= HiveMessageService();
-  late final StreamController<MessageResponseDTO> _queue= StreamController();
+  final HiveMessageService _hiveMessageService= HiveMessageService();
+  final StreamController<MessageResponseDTO> _queue= StreamController();
 
   ChatMessageState() {
     _queue.stream.asyncMap((msg) async {

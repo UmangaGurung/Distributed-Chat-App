@@ -20,27 +20,21 @@ class TypingEventState extends Notifier<Map<String, Map<String, String>>>{
 
     Map<String, String> existingEvents= state[conversationId] ?? const {};
 
-    state= {
-      ...state,
-      conversationId: {
-        ...existingEvents,
-        userId: "$userImage$separator$event"
-      }
-    };
-
-    userIdTimers[userId]?.cancel();
-
-    userIdTimers[userId]= Timer(Duration(seconds: 3), () {
-      Map<String, String> existing= state[conversationId] ?? {};
-
+    if (event=="TYPING") {
+      state = {
+        ...state,
+        conversationId: {
+          ...existingEvents,
+          userId: "$userImage$separator$event"
+        }
+      };
+    }else{
       state= {
         ...state,
         conversationId: {
-          ...existing
+          ...existingEvents
         }..remove(userId)
       };
-
-      userIdTimers.remove(userId);
-    });
+    }
   }
 }
