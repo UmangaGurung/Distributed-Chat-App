@@ -105,9 +105,11 @@ class HiveMessageService {
   Future<void> setExpirationTime(String conversationId) async{
     final key= 'conversation:$conversationId';
     if (ttlBox.containsKey(key)){
+
       return;
     }
     await ttlBox.put(key, DateTime.now());
+
   }
 
   bool doesMessageExist(String conversationId, String keyType){
@@ -160,5 +162,13 @@ class HiveMessageService {
       await ttlBox.delete(key);
       return true;
     }
+  }
+
+  Future<void> clearMessageCache() async{
+    int a= await box.clear();
+    int b= await indexBox.clear();
+    int c= await ttlBox.clear();
+
+    print("$a, $b, $c message hive boxes cleared");
   }
 }

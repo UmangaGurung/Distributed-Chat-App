@@ -1,3 +1,5 @@
+import 'package:chatfrontend/cache/service/hivemessageservice.dart';
+import 'package:chatfrontend/cache/service/hiveuserservice.dart';
 import 'package:chatfrontend/presentation/providers/socketprovider.dart';
 import 'package:chatfrontend/presentation/providers/tokenprovider.dart';
 import 'package:chatfrontend/tokenservice.dart';
@@ -25,7 +27,7 @@ class UserProfile extends ConsumerStatefulWidget {
 }
 
 class _UserProfileState extends ConsumerState<UserProfile> {
-  final UserAPIService userAPIService= UserAPIService();
+  final UserAPIService userAPIService = UserAPIService();
   late TokenService tokenService;
   late String token;
 
@@ -64,11 +66,22 @@ class _UserProfileState extends ConsumerState<UserProfile> {
 
     return Scaffold(
       backgroundColor: constColor.blackcolor,
-      appBar: AppBar(backgroundColor: constColor.blackcolor),
+      appBar: AppBar(
+        backgroundColor: constColor.blackcolor,
+        automaticallyImplyLeading: false,
+        centerTitle: true,
+        title: const Padding(
+          padding: EdgeInsets.only(top: 30),
+          child: Text(
+            "USER PROFILE",
+            style: TextStyle(color: constColor.cyancolor, fontSize: 20),
+          ),
+        ),
+      ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          SizedBox(height: 50),
+          const SizedBox(height: 50),
           Container(
             height: 150,
             width: 150,
@@ -85,7 +98,7 @@ class _UserProfileState extends ConsumerState<UserProfile> {
               ),
             ),
           ),
-          SizedBox(height: 50),
+          const SizedBox(height: 50),
           Flexible(
             child: ListView.separated(
               itemCount: details.length,
@@ -107,27 +120,26 @@ class _UserProfileState extends ConsumerState<UserProfile> {
                               details.entries.elementAt(index).key,
                               style: TextStyle(color: constColor.cyancolor),
                             ),
-                            userDetail[index].length>15
-                            ? SizedBox(
-                              height: 20,
-                              width: double.infinity,
-                              child: Marquee(
-                                text: userDetail[index],
-                                style: TextStyle(
-                                  color: constColor.cyancolor
+                            if (userDetail[index].length > 15)
+                              SizedBox(
+                                height: 20,
+                                width: double.infinity,
+                                child: Marquee(
+                                  text: userDetail[index],
+                                  style: const TextStyle(
+                                    color: constColor.cyancolor,
+                                  ),
+                                  startAfter: Duration(seconds: 1),
+                                  velocity: 50,
+                                  blankSpace: 50,
+                                  pauseAfterRound: Duration(seconds: 2),
                                 ),
-                                startAfter: Duration(seconds: 1),
-                                velocity: 50,
-                                blankSpace: 50,
-                                pauseAfterRound: Duration(seconds: 2),
-                              ),
-                            )
-                            : Text(
-                                userDetail[index],
-                              style: TextStyle(
-                                color: constColor.cyancolor
-                              ),
                               )
+                            else
+                              Text(
+                                userDetail[index],
+                                style: TextStyle(color: constColor.cyancolor),
+                              ),
                           ],
                         ),
                       ),
@@ -144,56 +156,58 @@ class _UserProfileState extends ConsumerState<UserProfile> {
             clipper: InitiateChatButton(),
             child: GestureDetector(
               onTap: () async {
-                if (token!='' || tokenService.isAuthenticated){
+                final userBox= HiveUserService();
+                final messageBox= HiveMessageService();
+                if (token != '' || tokenService.isAuthenticated) {
                   await userAPIService.logout(token);
                 }
+
                 ref.invalidate(conversationProvider);
                 ref.invalidate(messageProvider);
                 ref.invalidate(eventProvider);
+                await userBox.clearHiveCache();
+                await messageBox.clearMessageCache();
                 await tokenService.clearToken();
                 print("logging out....");
-                if (!mounted) return;
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => Welcome()),
-                      (Route<dynamic> route) => false,
-                );
+                if (context.mounted) {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => Welcome()),
+                        (Route<dynamic> route) => false,
+                  );
+                }else{
+                  return;
+                }
               },
               child: Container(
-                height: MediaQuery.of(context).size.width*0.13,
-                width: MediaQuery.of(context).size.width*0.5,
+                height: MediaQuery.of(context).size.width * 0.13,
+                width: MediaQuery.of(context).size.width * 0.5,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: <Color>[
-                        Color(0xFFFF006E),
-                        Color(0xFF8800FF),
-                      ]
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: <Color>[Color(0xFFFF006E), Color(0xFF8800FF)],
                   ),
                 ),
-                child: Row(
+                child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Icon(
-                      Pixel.logout,
-                      color: constColor.cyancolor,
-                    ),
-                    SizedBox(width: 10,),
+                    Icon(Pixel.logout, color: constColor.cyancolor),
+                    SizedBox(width: 10),
                     Text(
                       "LOGOUT",
                       style: TextStyle(
-                          color: constColor.cyancolor,
-                          fontSize: 14
+                        color: constColor.cyancolor,
+                        fontSize: 14,
                       ),
-                    )
+                    ),
                   ],
                 ),
               ),
             ),
           ),
-          SizedBox(height: 30,)
+          SizedBox(height: 30),
         ],
       ),
     );

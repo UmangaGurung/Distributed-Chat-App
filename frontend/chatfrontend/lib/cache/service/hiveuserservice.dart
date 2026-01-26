@@ -38,6 +38,22 @@ class HiveUserService {
   ) {
     final Map<String, ParticipantDetails> userDetailsMap = {};
 
+    if (userIdList.isEmpty){
+      final users= box.toMap();
+
+      final Map<String, ParticipantDetails> userMap= {};
+
+      for (var m in users.values) {
+        userMap[m.userId]= ParticipantDetails(
+              userId: m.userId,
+              userName: m.userName,
+              photoUrl: m.photoUrl,
+              phoneNumber: m.phoneNumber);
+      }
+
+      return userMap;
+    }
+
     for (var id in userIdList) {
       final user = box.get(id);
       if (user == null) continue;
@@ -106,5 +122,12 @@ class HiveUserService {
       }
     }
     return expiredIds;
+  }
+
+  Future<void> clearHiveCache() async{
+    int a= await box.clear();
+    int b= await ttlBox.clear();
+
+    print("$a and $b, user hive boxes cleared");
   }
 }

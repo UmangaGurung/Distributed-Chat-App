@@ -47,6 +47,10 @@ class _ChatMembersState extends ConsumerState<ChatMembers> {
   }
 
   Future<void> getUserDetails() async {
+    setState(() {
+      hasLoaded= false;
+    });
+
     String token= tokenService.token;
     if (!tokenService.isAuthenticated) {
       //token invalidation logic
@@ -73,7 +77,7 @@ class _ChatMembersState extends ConsumerState<ChatMembers> {
         Set<String> notExpiredUserIds = participantIdList
             .where((id) => !expiredUserIds.contains(id))
             .toSet();
-        print("UNExpired Ids $notExpiredUserIds");
+        print("Unexpired Ids $notExpiredUserIds");
         List<ParticipantDetails> fetchedUserDetails = [];
 
         if (expiredUserIds.isNotEmpty) {
@@ -91,15 +95,17 @@ class _ChatMembersState extends ConsumerState<ChatMembers> {
           print("user Details from api $fetchedUserDetails");
         }
 
-        print("fetching ${notExpiredUserIds.length} user details from cache");
-        final cacheResponse = hiveUserService
-            .getAllCachedUserDetails(notExpiredUserIds.toList())
-            .values
-            .toList();
-        fetchedUserDetails.addAll(cacheResponse);
+        if (notExpiredUserIds.isNotEmpty) {
+          print("fetching ${notExpiredUserIds.length} user details from cache");
+          final cacheResponse = hiveUserService
+              .getAllCachedUserDetails(notExpiredUserIds.toList())
+              .values
+              .toList();
+          fetchedUserDetails.addAll(cacheResponse);
 
-        print("userDetails from cache $cacheResponse");
-        print("all user Details $fetchedUserDetails");
+          print("userDetails from cache $cacheResponse");
+          print("all user Details $fetchedUserDetails");
+        }
 
         addToState([currentUserDetails, ...fetchedUserDetails]);
         break;
@@ -110,6 +116,7 @@ class _ChatMembersState extends ConsumerState<ChatMembers> {
         final Set<String> idList = {participantId};
 
         if (await hiveUserService.isExpired(participantId)) {
+          print("Yes, expired");
           final apiResponse = await userAPIService.getUserDetails(idList, token);
 
           addToState([currentUserDetails, ...apiResponse]);
@@ -130,10 +137,18 @@ class _ChatMembersState extends ConsumerState<ChatMembers> {
     if (!mounted) {
       return;
     }
+    print(participationDetails.toList());
     setState(() {
       userDetailsList = participationDetails;
       hasLoaded = true;
     });
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    userDetailsList= [];
+    super.dispose();
   }
 
   @override
@@ -236,6 +251,7 @@ class _ChatMembersState extends ConsumerState<ChatMembers> {
                 ),
               ),
             ),
+            const SizedBox(height: 25,),
           ],
         ),
       ),
