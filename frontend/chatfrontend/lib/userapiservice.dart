@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:chatfrontend/dto/conversation/participantdetails.dart';
 import 'package:chatfrontend/dto/usersearchresult.dart';
 import 'package:chatfrontend/loginresult.dart';
 import 'package:chatfrontend/registerresponse.dart';
 import 'package:chatfrontend/tokenservice.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:mime/mime.dart';
@@ -15,14 +17,14 @@ class UserAPIService {
   static const String userurl = "http://192.168.1.74:8081/api/users";
 
   final GoogleSignIn googleSignIn = GoogleSignIn.instance;
+  final String? googleClientId= dotenv.env['CLIENT_ID'];
+  final String? googleServerClientId= dotenv.env['SERVER_CLIENT_ID'];
 
   Future<GoogleRegisterResponse> signInWithGoogle(TokenService authService) async {
     try {
       await googleSignIn.initialize(
-        clientId:
-            '313848747985-ahq6apuqkpivg5eeb8o19jfbv8oq77k7.apps.googleusercontent.com',
-        serverClientId:
-            '313848747985-v0j3covj1p3l8g79v8ineml6d3v93o8o.apps.googleusercontent.com',
+        clientId: googleClientId,
+        serverClientId: googleServerClientId,
       );
 
       final account = await googleSignIn.authenticate(
@@ -244,6 +246,39 @@ class UserAPIService {
       print("Request error: $e");
       return false;
     }
+  }
+
+  Future<List<ParticipantDetails>> getUserDetails(Set<String> userIdList, String token) async{
+    final url= Uri.parse(userurl+"/allusers");
+    try{
+      final response= await http.post(
+          url,
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'userIdList': userIdList.toList()
+          })
+      );
+
+      if (response.statusCode==200) {
+        List<dynamic> responseBody = jsonDecode(response.body);
+        print(responseBody);
+        List<ParticipantDetails> participantDetailsList = [];
+
+        for (var user in responseBody) {
+          participantDetailsList.add(
+              ParticipantDetails.fromJson(user)
+          );
+        }
+        print(participantDetailsList);
+        return participantDetailsList;
+      }
+    }catch(e){
+      print(e);
+    }
+    return [];
   }
 
   Future<bool> logout(String token) async{

@@ -15,9 +15,9 @@ class ParticipantDetails{
   factory ParticipantDetails.fromJson(Map<String, dynamic> json) {
     String imageURL = json['photoUrl'];
     if (!imageURL.startsWith("https")) {
-      imageURL = "http://192.168.1.74:8081/photos/" + imageURL
+      imageURL = "http://192.168.1.74:8081/photos/${imageURL
           .split('/')
-          .last;
+          .last}";
     }
 
     return ParticipantDetails(

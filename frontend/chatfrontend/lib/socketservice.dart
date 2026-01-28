@@ -1,8 +1,12 @@
 import 'dart:convert';
-import 'package:chatfrontend/dto/conversation/messagedetailsdto.dart';
-import 'package:chatfrontend/dto/conversation/messageresponsedto.dart';
+import 'package:chatfrontend/dto/conversation/conversation&userdetailsdto.dart';
+import 'package:chatfrontend/dto/conversation/conversationresponsedto.dart';
+import 'package:chatfrontend/dto/message/messagedetailsdto.dart';
+import 'package:chatfrontend/dto/message/messageresponsedto.dart';
 import 'package:chatfrontend/dto/conversation/participantdetails.dart';
 import 'package:chatfrontend/presentation/providers/chatmessagestate.dart';
+import 'package:chatfrontend/presentation/providers/conversationstate.dart';
+import 'package:chatfrontend/presentation/providers/typingeventstate.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
 
 class SocketService {
@@ -15,8 +19,13 @@ class SocketService {
   final Set<String> _seenMessageIds = {};
 
   final ChatMessageState chatMessageState;
+  final TypingEventState typingEventState;
+  final ConversationState conversationState;
+  dynamic convoIdEvent;
 
-  SocketService(this.chatMessageState);
+  SocketService(this.chatMessageState, this.typingEventState, this.conversationState);
+
+  static const String separator = '\u2021';
 
   void connectToWebSocket(String token, String userId) {
     print("connectToWebSocket called");
@@ -52,21 +61,57 @@ class SocketService {
       callback: callback,
     );
 
-    final convoId= '4e0d5c2e-d112-476a-9deb-2af06417559b';
     stompClient.subscribe(
-        destination: '/topic/event/$convoId',
-        callback: callbackTypingEvent
+      destination: '/topic/event/$userId',
+      callback: newConversationEvent,
+    );
+
+    stompClient.subscribe(
+      destination: '/queue/ack/$userId',
+      callback: callbackSuccessfullySent,
     );
 
     isSubscribed = true;
   }
 
-  void callbackTypingEvent(StompFrame frame){
-    print("Received on topic: ${frame.headers}");
-
-    final body= frame.body;
-
+  void newConversationEvent(StompFrame frame) {
+    print("Recieved convo Event");
+    final body = jsonDecode(frame.body!);
     print(body);
+
+    ConversationAndUserDetailsDTO conversationAndUserDetailsDTO =
+        ConversationAndUserDetailsDTO(
+          conversationResponseDTO: ConversationResponseDTO.fromJson(
+            body['conversationResponseDTO'],
+          ),
+          participantDetailsDTO: body['detailGrpcDTO'] != null
+              ? ParticipantDetails.fromJson(body['detailGrpcDTO'])
+              : null,
+        );
+
+    conversationState.addNewConversationToState(conversationAndUserDetailsDTO);
+  }
+
+  void subscribeToEvent(String conversationId) {
+    if (!isConnected) {
+      return;
+    }
+    print("Subscribing to event");
+
+    if (convoIdEvent != null) {
+      unSubscribeToEvent();
+    }
+
+    convoIdEvent = stompClient.subscribe(
+      destination: '/topic/event/$conversationId',
+      callback: callbackTypingEvent,
+    );
+  }
+
+  void unSubscribeToEvent() {
+    convoIdEvent(unsubscribeHeaders: <String, String>{});
+    convoIdEvent = null;
+    print("Removed Subscription");
   }
 
   void callback(StompFrame frame) {
@@ -82,19 +127,21 @@ class SocketService {
     print(jsonMsg['messageResponse']);
     print(jsonMsg['senderDetails']);
 
-    MessageDetailsDTO messageDetailsDTO= MessageDetailsDTO(
-        messageResponseDTO: MessageResponseDTO.fromJson(jsonMsg['messageResponse']),
-        userDetailsDTO: ParticipantDetails.fromJson(jsonMsg['senderDetails'])
+    MessageDetailsDTO messageDetailsDTO = MessageDetailsDTO(
+      messageResponseDTO: MessageResponseDTO.fromJson(
+        jsonMsg['messageResponse'],
+      ),
+      userDetailsDTO: ParticipantDetails.fromJson(jsonMsg['senderDetails']),
     );
 
     chatMessageState.addNewMessages(messageDetailsDTO);
   }
 
-  void sendMessage(String message) {
+  void sendMessage(String message, String conversationId, String type) {
     final messageData = {
-      'conversationId': '4e0d5c2e-d112-476a-9deb-2af06417559b',
+      'conversationId': conversationId,
       'message': message,
-      'type': 'TEXT',
+      'type': type,
     };
 
     stompClient.send(
@@ -103,16 +150,45 @@ class SocketService {
     );
   }
 
-  void typingEvent(String conversationId, String userId, String event){
-    final info= {
-      'conversationId': conversationId,
-      'event': event
-    };
+  void typingEvent(String conversationId, String userId, String event) {
+    final info = {'conversationId': conversationId, 'event': event};
 
     stompClient.send(
-        destination: '/app/chat.typingEvent',
-        body: jsonEncode(info)
+      destination: '/app/chat.typingEvent',
+      body: jsonEncode(info),
     );
+  }
+
+  void callbackTypingEvent(StompFrame frame) {
+    print("Received on topic: ${frame.headers}");
+
+    final body = frame.body;
+
+    List<String> payload = body!.split(separator);
+    print(payload);
+
+    typingEventState.setTypingEvent(payload);
+  }
+
+  void callbackSuccessfullySent(StompFrame frame) {
+    print("Message successfully sent");
+    final response = jsonDecode(frame.body!);
+
+    print(response);
+
+    ParticipantDetails participantDetails = ParticipantDetails(
+      userId: '',
+      userName: '',
+      photoUrl: '',
+      phoneNumber: '',
+    );
+
+    MessageDetailsDTO messageDetailsDTO = MessageDetailsDTO(
+      messageResponseDTO: MessageResponseDTO.fromJson(response),
+      userDetailsDTO: participantDetails,
+    );
+
+    chatMessageState.addNewMessages(messageDetailsDTO);
   }
 
   void disconnectConnection() {
@@ -122,8 +198,4 @@ class SocketService {
     isConnected = false;
     isSubscribed = false;
   }
-
-  // void setOnMessage(void Function(String) cb) {
-  //   onMessage = cb;
-  // }
 }

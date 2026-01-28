@@ -1,12 +1,14 @@
 import 'dart:convert';
 
 import 'package:chatfrontend/dto/conversation/conversation&userdetailsdto.dart';
-import 'package:chatfrontend/dto/conversation/messagedetailsdto.dart';
-import 'package:chatfrontend/dto/conversation/messageresponsedto.dart';
+import 'package:chatfrontend/dto/message/messagedetailsdto.dart';
+import 'package:chatfrontend/dto/message/messageresponsedto.dart';
 import 'package:chatfrontend/dto/conversation/participantdetails.dart';
 
 import 'dto/conversation/conversationresponsedto.dart';
 import 'package:http/http.dart' as http;
+
+import 'enums/UpdateType.dart';
 
 class ConversationAPIService {
   static const String conversationUrl =
@@ -17,7 +19,7 @@ class ConversationAPIService {
     String userId,
   ) async {
     try {
-      final url = Uri.parse(conversationUrl + "/direct-messages");
+      final url = Uri.parse("$conversationUrl/direct-messages");
 
       final response = await http.post(
         url,
@@ -43,32 +45,83 @@ class ConversationAPIService {
         );
       }
     } catch (e) {
+      print(e);
       return null;
+    }
+    return null;
+  }
+  
+  Future<ConversationAndUserDetailsDTO> createGroupConversation(String token, String groupName, List<String> userIdList) async{
+    final url= Uri.parse("$conversationUrl/groups");
+
+    try{
+      final response= await http.post(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json'
+        },
+        body: jsonEncode({
+          'name': groupName,
+          'type': 'GROUP',
+          'participants': userIdList
+        })
+      );
+
+      if (response.statusCode==200){
+        print(response.body);
+        Map<String, dynamic> data= jsonDecode(response.body);
+        print(data);
+
+        return ConversationAndUserDetailsDTO(
+            conversationResponseDTO: ConversationResponseDTO.fromJson(data['conversationResponseDTO']),
+            participantDetailsDTO: null
+        );
+      }
+      throw Exception("Error creating");
+    }catch(e){
+      print(e);
+      throw Exception("Error creating group");
     }
   }
 
   Future<List<MessageDetailsDTO>> getConversationMessages(
     String token,
     String conversationId,
+    String messageId,
+    String timeStamp,
+    int limit,
+    bool firstFetch,
   ) async {
-    try {
-      final url = Uri.parse(
-        conversationUrl + "/conversations/${conversationId}/messages",
-      );
 
-      final response = await http.get(
+    print(messageId);
+    print(timeStamp);
+    print(limit);
+    print(firstFetch);
+    try {
+      final url = Uri.parse(conversationUrl + "/${conversationId}/messages");
+
+      final response = await http.post(
         url,
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
+        body: jsonEncode({
+          'messageId': messageId,
+          'timeStamp': timeStamp,
+          'limit': limit,
+          'firstFetch': firstFetch,
+        }),
       );
 
       if (response.statusCode == 200) {
+        print(response.body);
         final List<dynamic> data = jsonDecode(response.body);
         final List<MessageDetailsDTO> messageDetailsList = [];
+        print(data);
 
-        data.forEach((message) {
+        for (var message in data) {
           MessageDetailsDTO messageDetailsDTO = MessageDetailsDTO(
             messageResponseDTO: MessageResponseDTO.fromJson(
               message['messageResponse'],
@@ -79,7 +132,9 @@ class ConversationAPIService {
           );
 
           messageDetailsList.add(messageDetailsDTO);
-        });
+        }
+
+        return messageDetailsList;
       }
       return [];
     } catch (e) {
@@ -87,7 +142,46 @@ class ConversationAPIService {
     }
   }
 
-  Future<List<ConversationAndUserDetailsDTO>> getAllConversations(String token) async {
+  Future<List<MessageDetailsDTO>> getLatestMessages(
+      String token, String messageId, String timeStamp, String conversationId) async{
+    final url= Uri.parse("$conversationUrl/$conversationId/messages/latest");
+
+    try{
+      final response= await http.post(
+          url,
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json'
+          },
+          body: jsonEncode({
+            'messageId': messageId,
+            'timeStamp': timeStamp
+          })
+      );
+
+      if (response.statusCode==200){
+        final List<dynamic> data= jsonDecode(response.body);
+        print("Inside convoservice");
+        print(data);
+
+        List<MessageDetailsDTO> messageDetailsList= data.map(
+            (m) => MessageDetailsDTO(
+                    messageResponseDTO: MessageResponseDTO.fromJson(m['messageResponse']),
+                    userDetailsDTO: ParticipantDetails.fromJson(m['senderDetails']))
+        ).toList();
+
+        return messageDetailsList;
+      }
+      return [];
+    }catch(e){
+      print(e);
+      return [];
+    }
+  }
+
+  Future<List<ConversationAndUserDetailsDTO>> getAllConversations(
+    String token,
+  ) async {
     try {
       final url = Uri.parse(conversationUrl);
 
@@ -126,6 +220,36 @@ class ConversationAPIService {
       return [];
     } catch (e) {
       return [];
+    }
+  }
+
+
+  Future<void> updateConversation(
+      String conversationId,
+      String token,
+      String conversationName,
+      List<String> userIds,
+      UpdateType type) async{
+    final url= Uri.parse("$conversationUrl/$conversationId");
+    try{
+      final response= await http.patch(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json'
+        },
+        body: jsonEncode({
+          'conversationName': conversationName,
+          'userIds': userIds,
+          'type': type.name
+        })
+      );
+
+      if (response.statusCode==200){
+
+      }
+    }catch(e){
+      
     }
   }
 }

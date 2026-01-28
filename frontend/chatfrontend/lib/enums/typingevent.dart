@@ -1,0 +1,4 @@
+enum TypingEvent{
+  STARTED_TYPING,
+  ALREADY_TYPING
+}

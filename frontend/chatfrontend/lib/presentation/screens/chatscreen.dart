@@ -1,16 +1,17 @@
 import 'package:chatfrontend/presentation/providers/tokenprovider.dart';
-import 'package:chatfrontend/presentation/screens/chat/testscreen.dart';
 import 'package:chatfrontend/presentation/screens/conversationscreen.dart';
 import 'package:chatfrontend/presentation/screens/searchusers.dart';
-import 'package:chatfrontend/presentation/screens/welcome.dart';
-import 'package:chatfrontend/socketservice.dart';
+import 'package:chatfrontend/presentation/screens/user/userprofile.dart';
+
 import 'package:chatfrontend/tokenservice.dart';
 import 'package:chatfrontend/userapiservice.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pixelarticons/pixelarticons.dart';
 
-import 'chatscreentest.dart';
+
 import '../providers/socketprovider.dart';
+import 'package:chatfrontend/constants.dart' as constColor;
 
 class Chatscreen extends ConsumerStatefulWidget {
   const Chatscreen({super.key});
@@ -20,8 +21,16 @@ class Chatscreen extends ConsumerStatefulWidget {
 }
 
 class _ChatscreenState extends ConsumerState<Chatscreen> {
+  int _index = 0;
+
   final userAPIService = UserAPIService();
   late TokenService authService;
+
+  final List<Widget> widgets= [
+    ConversationScreen(),
+    SearchUsers(),
+    UserProfile()
+  ];
 
   @override
   void initState() {
@@ -33,95 +42,34 @@ class _ChatscreenState extends ConsumerState<Chatscreen> {
   Widget build(BuildContext context) {
     final socket = ref.watch(socketService);
 
-    int counter = 0;
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              Center(
-                child: TextButton(
-                  onPressed: () async {
-                    final token = authService.token;
-                    if (token != '' && authService.isAuthenticated) {
-                      await userAPIService.logout(token);
-                    }
-                    print(" login out...");
-                    await authService.clearToken();
-                    if (!mounted) return;
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (context) => Welcome()),
-                      (Route<dynamic> route) => false,
-                    );
-                  },
-                  child: Text("LOGOUT"),
-                ),
-              ),
-              SizedBox(height: 40),
-              Center(
-                child: TextButton(
-                  onPressed: () async {
-                    print(socket.isConnected);
-                    print(socket.isSubscribed);
-                    final token = authService.token;
-                    if (token == '' || !authService.isAuthenticated) {
-                      await authService.clearToken();
-                      return;
-                    }
-                    socket.sendMessage("Message $counter TEST CHAT 456");
-                    counter++;
-                  },
-                  child: Text("Send"),
-                ),
-              ),
-              // Center(
-              //   child: TextButton(
-              //     onPressed: () {
-              //       Navigator.push(
-              //         context,
-              //         MaterialPageRoute(builder: (context) => ChatscreenTest(conversation: null,)),
-              //       );
-              //     },
-              //     child: Text("ChatList"),
-              //   ),
-              // ),
-              Center(
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => TestScreen()),
-                    );
-                  },
-                  child: Text("Type Test"),
-                ),
-              ),
-              Center(
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => SearchUsers()),
-                    );
-                  },
-                  child: Text("Search Users"),
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ConversationScreen(),
-                    ),
-                  );
-                },
-                child: Text("Conversation List"),
-              ),
-            ],
-          ),
+      body: widgets.elementAt(_index),
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: constColor.blackcolor,
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(icon: Icon(Pixel.chat), label: "Chat"),
+          BottomNavigationBarItem(icon: Icon(Pixel.search), label: "Search"),
+          BottomNavigationBarItem(icon: Icon(Pixel.user), label: "Profile")
+        ],
+        unselectedIconTheme: IconThemeData(
+          color: constColor.magentacolor,
+              size: 25
         ),
+        selectedIconTheme: IconThemeData(
+          color: constColor.magentacolor,
+          size: 28
+        ),
+        showUnselectedLabels: false,
+        selectedItemColor: constColor.cyancolor,
+        selectedLabelStyle: TextStyle(
+          fontSize: 12,
+        ),
+        currentIndex: _index,
+        onTap: (index) {
+          setState(() {
+            _index= index;
+          });
+        }
       ),
     );
   }

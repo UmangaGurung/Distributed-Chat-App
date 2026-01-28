@@ -1,5 +1,5 @@
-import 'package:chatfrontend/presentation/screens/login.dart';
-import 'package:chatfrontend/presentation/screens/register.dart';
+import 'package:chatfrontend/presentation/screens/user/login.dart';
+import 'package:chatfrontend/presentation/screens/user/register.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:chatfrontend/constants.dart' as constants;

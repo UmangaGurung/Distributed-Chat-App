@@ -1,27 +1,33 @@
+import 'package:chatfrontend/googleregisterresponse.dart';
 import 'package:chatfrontend/loginresult.dart';
 import 'package:chatfrontend/presentation/providers/tokenprovider.dart';
-import 'package:chatfrontend/presentation/screens/addPhoneNumber.dart';
-import 'package:chatfrontend/presentation/screens/chatscreen.dart';
+import 'package:chatfrontend/presentation/screens/user/addPhoneNumber.dart';
+import 'package:chatfrontend/presentation/screens/user/register2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:chatfrontend/constants.dart' as constants;
-import 'package:chatfrontend/userapiservice.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../googleregisterresponse.dart';
 
-class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+import '../../../registerresponse.dart';
+import '../../../userapiservice.dart';
+import '../chatscreen.dart';
+
+class RegisterScreen extends ConsumerStatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formkey = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
+  final _confirmpassword = TextEditingController();
 
   bool _obscurePassword = true;
+
+  final emailRe = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]{2,}$');
 
   final userservice= UserAPIService();
 
@@ -44,28 +50,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  SizedBox(height: 40),
+                  SizedBox(height: 40,),
                   SizedBox(
                     width: 150,
                     height: 90,
-                    child: Image.asset(
-                      'assets/icon/logo.png',
+                    child: Image.asset('assets/icon/logo.png',
                       fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
                           color: constants.blackcolor,
-                          child: Icon(
-                            Icons.image,
-                            size: 50,
-                            color: Colors.grey[400],
-                          ),
+                          child: Icon(Icons.image, size: 50, color: Colors.grey[400]),
                         );
                       },
                     ),
                   ),
                   SizedBox(
                     child: Text(
-                      "Login",
+                      "Register",
                       style: TextStyle(
                         color: constants.cyancolor,
                         fontSize: 22,
@@ -87,7 +88,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     alignment: Alignment.centerLeft,
                     child: TextFormField(
                       controller: _email,
-                      keyboardType: TextInputType.text,
+                      keyboardType: TextInputType.emailAddress,
                       style: TextStyle(
                         color: constants.cyancolor,
                         fontSize: 12,
@@ -108,6 +109,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           borderSide: BorderSide(color: constants.magentacolor),
                         ),
                       ),
+                      validator: (value) {
+                        final v = value?.trim() ?? '';
+                        if (v.isEmpty) return "Please enter your email";
+                        if (!emailRe.hasMatch(v))
+                          return "Please enter a valid email";
+                        return null;
+                      },
                     ),
                   ),
                   SizedBox(height: 25),
@@ -125,7 +133,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     alignment: Alignment.centerLeft,
                     child: TextFormField(
                       controller: _password,
-                      keyboardType: TextInputType.text,
+                      keyboardType: TextInputType.visiblePassword,
                       obscureText: _obscurePassword,
                       style: TextStyle(
                         color: constants.cyancolor,
@@ -163,10 +171,72 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return "Please re-enter your password";
+                          return "Please enter a password";
                         }
                         if (value.length < 6) {
                           return "Password is too short";
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  SizedBox(height: 25),
+                  Container(
+                    margin: EdgeInsets.only(left: 25, right: 25),
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "Confirm",
+                      style: TextStyle(color: constants.cyancolor),
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Container(
+                    margin: EdgeInsets.only(left: 22, right: 22),
+                    alignment: Alignment.centerLeft,
+                    child: TextFormField(
+                      controller: _confirmpassword,
+                      keyboardType: TextInputType.visiblePassword,
+                      obscureText: _obscurePassword,
+                      style: TextStyle(
+                        color: constants.cyancolor,
+                        fontSize: 12,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: "Confirm your password",
+                        hintStyle: TextStyle(fontSize: 12),
+
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide(color: constants.magentacolor),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide(color: constants.magentacolor),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide(color: constants.magentacolor),
+                        ),
+                        suffixIcon: IconButton(
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "Please re-enter your password";
+                        }
+                        if (value != _password.text) {
+                          return "Passwords do not match";
                         }
                         return null;
                       },
@@ -179,31 +249,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     child: SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () async {
+                        onPressed: () {
                           if (!_formkey.currentState!.validate()) {
                             return;
-                          }
-                          bool success;
-                          try {
-                            final tokenService= ref.read(tokenProvider.notifier);
-                            success = await UserAPIService.userLogin(
-                              _email.text.trim(),
-                              _password.text,
-                              tokenService
-                            );
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text("Login failed: $e"),
-                              ),
-                            );
-                            return;
-                          }
-                          if (success) {
-                            Navigator.pushAndRemoveUntil(
+                          } else {
+                            Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => Chatscreen()),
-                                  (Route<dynamic> route) => false,
+                              MaterialPageRoute(
+                                builder: (context) => RegisterContinue(
+                                  email: _email.text.trim(),
+                                  password: _password.text.trim(),
+                                ),
+                              ),
                             );
                           }
                         },
@@ -222,7 +279,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ),
                         child: Text(
-                          "Login",
+                          "Continue",
                           style: TextStyle(
                             color: constants.cyancolor,
                             fontSize: 12,
@@ -270,7 +327,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     child: OutlinedButton.icon(
                       onPressed: () async {
                         final authService= ref.read(tokenProvider.notifier);
-
                         GoogleRegisterResponse response= await userservice.signInWithGoogle(authService);
                         if (response.status=="GOOGLE_LOGIN"
                             && response.loginResult==LoginResult.SUCCESS) {
