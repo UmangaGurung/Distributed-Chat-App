@@ -3,6 +3,7 @@ package com.distributedchat.userservice.repository;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -13,6 +14,7 @@ import com.distributedchat.userservice.model.dto.GRPCUserDetailsDTO;
 import com.distributedchat.userservice.model.dto.RegisterResponseDTO;
 import com.distributedchat.userservice.model.dto.RegisterStatus;
 import com.distributedchat.userservice.model.dto.UserDTO;
+import com.distributedchat.userservice.model.dto.UserListDTO;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
@@ -103,18 +105,29 @@ public class UserDAOImpl implements UserDAO{
 	}
 
 	@Override
-	public List<UserDTO> getUsers(UUID uid) {
+	public List<UserListDTO> getUsers(Set<UUID> userIdList) {
 		// TODO Auto-generated method stub
 		TypedQuery<User> query= entitymanager.createQuery(
-				"SELECT u FROM User u WHERE u.userid!=:uid", User.class)
-				.setParameter("uid", uid);
+				"SELECT u FROM User u WHERE u.userid IN :userIdList", User.class)
+				.setParameter("userIdList", userIdList);
 		
 		List<User> userList= query.getResultList();
 		
-		List<UserDTO> userListDTO= new ArrayList<>();
+		List<UserListDTO> userListDTO= new ArrayList<>();
 				
 		for (User user: userList) {
-			UserDTO userDTO= modifiedUserDetails(user);
+			String phone;
+			if (user.getPhonenumber()==null) {
+				phone="N/A";
+			}else {
+				phone= user.getPhonenumber();
+			}
+			UserListDTO userDTO= new UserListDTO(
+					user.getUserid(), 
+					user.getFullname(), 
+					user.getProfileimagepath(), 
+					phone
+					);
 			userListDTO.add(userDTO);
 		}
 		

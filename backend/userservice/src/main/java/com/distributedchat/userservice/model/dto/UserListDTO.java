@@ -4,53 +4,52 @@ import java.util.UUID;
 
 public class UserListDTO {
 	
-	private UUID uid;
-	private String email;
-	private String fullname;
-	private String imagePath;
-	private String phone;
+	private UUID userId;
+	private String userName;
+	private String photoUrl;
+	private String phoneNumber;
 	
 	public UserListDTO() {
 		// TODO Auto-generated constructor stub
 	}
-	
-	public UserListDTO(UUID uid, String email, String fullname, String imagePath, String phone) {
+
+	public UserListDTO(UUID userId, String userName, String photoUrl, String phoneNumber) {
 		super();
-		this.uid = uid;
-		this.email = email;
-		this.fullname = fullname;
-		this.imagePath = imagePath;
-		this.phone = phone;
+		this.userId = userId;
+		this.userName = userName;
+		this.photoUrl = photoUrl;
+		this.phoneNumber = phoneNumber;
 	}
 
-	public UUID getUid() {
-		return uid;
+	public UUID getUserId() {
+		return userId;
 	}
-	public void setUid(UUID uid) {
-		this.uid = uid;
+
+	public void setUserId(UUID userId) {
+		this.userId = userId;
 	}
-	public String getEmail() {
-		return email;
+
+	public String getUserName() {
+		return userName;
 	}
-	public void setEmail(String email) {
-		this.email = email;
+
+	public void setUserName(String userName) {
+		this.userName = userName;
 	}
-	public String getFullname() {
-		return fullname;
+
+	public String getPhotoUrl() {
+		return photoUrl;
 	}
-	public void setFullname(String fullname) {
-		this.fullname = fullname;
+
+	public void setPhotoUrl(String photoUrl) {
+		this.photoUrl = photoUrl;
 	}
-	public String getImagePath() {
-		return imagePath;
+
+	public String getPhoneNumber() {
+		return phoneNumber;
 	}
-	public void setImagePath(String imagePath) {
-		this.imagePath = imagePath;
-	}
-	public String getPhone() {
-		return phone;
-	}
-	public void setPhone(String phone) {
-		this.phone = phone;
+
+	public void setPhoneNumber(String phoneNumber) {
+		this.phoneNumber = phoneNumber;
 	}
 }

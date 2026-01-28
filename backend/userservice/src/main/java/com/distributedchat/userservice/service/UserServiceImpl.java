@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.security.authentication.BadCredentialsException;
@@ -19,9 +20,11 @@ import com.distributedchat.userservice.component.RedisTokenPublisher;
 import com.distributedchat.userservice.model.dto.AddPhoneNumberDTO;
 import com.distributedchat.userservice.model.dto.GoogleLoginDTO;
 import com.distributedchat.userservice.model.dto.GoogleResponseDTO;
+import com.distributedchat.userservice.model.dto.ParticipantListDTO;
 import com.distributedchat.userservice.model.dto.RegisterResponseDTO;
 import com.distributedchat.userservice.model.dto.RegisterStatus;
 import com.distributedchat.userservice.model.dto.UserDTO;
+import com.distributedchat.userservice.model.dto.UserListDTO;
 import com.distributedchat.userservice.model.dto.UserLoginDTO;
 import com.distributedchat.userservice.model.dto.UserRegistrationDTO;
 import com.distributedchat.userservice.repository.UserDAO;
@@ -152,15 +155,15 @@ public class UserServiceImpl implements UserService{
 	}
 
 	@Override
-	public List<UserDTO> getUsers(String uid) {
+	public List<UserListDTO> getUsers(ParticipantListDTO participantListDTO) {
 		// TODO Auto-generated method stub
-		if (uid==null || uid.equals("")) {
+		Set<UUID> userIdList= participantListDTO.getUserIdList();
+		
+		if (userIdList.isEmpty()) {
 			return Collections.emptyList();
 		}
 		
-		UUID userid= UUID.fromString(uid);
-		
-		return userdao.getUsers(userid);
+		return userdao.getUsers(userIdList);
 	}
 	
 	//token blacklisting is happening before db operation finalizes

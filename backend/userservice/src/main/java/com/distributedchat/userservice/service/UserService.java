@@ -7,8 +7,10 @@ import org.springframework.web.multipart.MultipartFile;
 import com.distributedchat.userservice.model.dto.AddPhoneNumberDTO;
 import com.distributedchat.userservice.model.dto.GoogleLoginDTO;
 import com.distributedchat.userservice.model.dto.GoogleResponseDTO;
+import com.distributedchat.userservice.model.dto.ParticipantListDTO;
 import com.distributedchat.userservice.model.dto.RegisterResponseDTO;
 import com.distributedchat.userservice.model.dto.UserDTO;
+import com.distributedchat.userservice.model.dto.UserListDTO;
 import com.distributedchat.userservice.model.dto.UserLoginDTO;
 import com.distributedchat.userservice.model.dto.UserRegistrationDTO;
 
@@ -20,7 +22,7 @@ public interface UserService {
 	
 	public GoogleResponseDTO googleLogin(GoogleLoginDTO googledto);
 	
-	public List<UserDTO> getUsers(String uid);
+	public List<UserListDTO> getUsers(ParticipantListDTO participantListDTO);
 
 	public String addPhoneNumber(String uid, AddPhoneNumberDTO addPhone, String oldToken);
 
