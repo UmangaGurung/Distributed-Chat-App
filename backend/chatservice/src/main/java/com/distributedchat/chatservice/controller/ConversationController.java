@@ -1,12 +1,11 @@
 package com.distributedchat.chatservice.controller;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,6 +21,8 @@ import com.distributedchat.chatservice.model.dto.Conversation.ConversationUpdate
 import com.distributedchat.chatservice.model.dto.Conversation.ConvoMessageDTO;
 import com.distributedchat.chatservice.model.dto.Conversation.CreateOrFindDTO;
 import com.distributedchat.chatservice.model.dto.Conversation.UpdateType;
+import com.distributedchat.chatservice.model.dto.Message.LatestMessageDTO;
+import com.distributedchat.chatservice.model.dto.Message.MessagePaginationDTO;
 import com.distributedchat.chatservice.service.ConversationService;
 
 @RestController
@@ -36,39 +37,39 @@ public class ConversationController {
 	}
 	
 	@PostMapping("/conversations/groups")
-	public ResponseEntity<Map<String, Object>> createGroupConversation(
-			@RequestBody ConversationGroupDTO conversationGroupDTO){
-		String uid= SecurityContextHolder.getContext()
-						.getAuthentication()
-						.getPrincipal()
-						.toString();
+	public ResponseEntity<ConversationDetailsListDTO> createGroupConversation(
+			@RequestBody ConversationGroupDTO conversationGroupDTO,
+			@AuthenticationPrincipal Map<String, String> userDetails){
+		String uid= userDetails.get("userId");
+		String userName= userDetails.get("userName");
+		String phone= userDetails.get("phone");
+		String photo= userDetails.get("photo");
 		
-		ConversationResponseDTO conversation= conversationService.createGroupConversation(conversationGroupDTO, uid);
-		Map<String, Object> response= new HashMap<>();
-		response.put("response", conversation);
-		
-		return ResponseEntity.status(HttpStatus.OK).body(response);
+		ConversationDetailsListDTO conversation=
+				conversationService.createGroupConversation(conversationGroupDTO, uid, userName, phone, photo);
+	
+		return ResponseEntity.status(HttpStatus.OK).body(conversation);
 	}
 	
 	@PostMapping("/conversations/direct-messages")
 	public ResponseEntity<ConversationDetailsListDTO> createOrFindConversation(
-			@RequestBody CreateOrFindDTO createOrFindDTO){
-		String uid= SecurityContextHolder.getContext()
-				.getAuthentication()
-				.getPrincipal()
-				.toString();
+			@RequestBody CreateOrFindDTO createOrFindDTO,
+			@AuthenticationPrincipal Map<String, String> userDetail){
+		String userId= userDetail.get("userId");
+		String userName= userDetail.get("userName");
+		String phone= userDetail.get("phone");
+		String photo= userDetail.get("photo");
 		
-		ConversationDetailsListDTO response= conversationService.createOrFindConversation(createOrFindDTO, uid);
+		ConversationDetailsListDTO response= conversationService.createOrFindConversation(
+				createOrFindDTO, userId, userName, phone, photo);
 		
 		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
 	
 	@GetMapping("/conversations")
-	public ResponseEntity<List<ConversationDetailsListDTO>> getConversations(){
-		String uid= SecurityContextHolder.getContext()
-						.getAuthentication()
-						.getPrincipal()
-						.toString();
+	public ResponseEntity<List<ConversationDetailsListDTO>> getConversations(
+			@AuthenticationPrincipal Map<String, String> userDetails){
+		String uid= userDetails.get("userId");
 		
 		List<ConversationDetailsListDTO> allConversations= conversationService.getConversation(uid);
 		
@@ -78,17 +79,15 @@ public class ConversationController {
 	@PatchMapping("/conversations/{conversationId}")
 	private ResponseEntity<ConversationResponseDTO> updateConversation(
 			@PathVariable("conversationId") String convoId,
-			@RequestBody ConversationUpdateDTO conversationUpdateDTO){
-		String userId= SecurityContextHolder.getContext()
-				.getAuthentication()
-				.getPrincipal()
-				.toString();
+			@RequestBody ConversationUpdateDTO conversationUpdateDTO,
+			@AuthenticationPrincipal Map<String, String> userDetails){
+		String userId= userDetails.get("userId");
 		
 		if (conversationUpdateDTO.getType()==UpdateType.EDIT_CHAT_NAME) {
 			ConversationResponseDTO responseDTO= conversationService.editConversationDetails(conversationUpdateDTO, convoId, userId);
 			
 			return ResponseEntity.status(HttpStatus.OK).body(responseDTO);
-		}else if (conversationUpdateDTO.getType()==UpdateType.ADD_PARTCIPANTS) {
+		}else if (conversationUpdateDTO.getType()==UpdateType.ADD_PARTICIPANTS) {
 			ConversationResponseDTO responseDTO= conversationService.addParticipants(conversationUpdateDTO, convoId, userId);
 			
 			return ResponseEntity.status(HttpStatus.OK).body(responseDTO);
@@ -96,18 +95,27 @@ public class ConversationController {
 		 return ResponseEntity.badRequest().build();
 	}
 	
-	@GetMapping("/conversations/{conversationId}/messages")
+	@PostMapping("/conversations/{conversationId}/messages")
 	public ResponseEntity<List<ConvoMessageDTO>> getConversationMessages(
-			@PathVariable("conversationId") String convoId){
-		String userId= SecurityContextHolder.getContext()
-				.getAuthentication()
-				.getPrincipal()
-				.toString();
-		
-		List<ConvoMessageDTO> allMessages= conversationService.getAllConversationMessages(convoId, userId);
-//		Map<String, Object> response= new HashMap<>();
-//		response.put("messages", allMessages);
+			@PathVariable("conversationId") String convoId,
+			@RequestBody MessagePaginationDTO messagePaginationDTO,
+			@AuthenticationPrincipal Map<String, String> userDetails){
+		String userId= userDetails.get("userId");
+				
+		List<ConvoMessageDTO> allMessages= conversationService.getAllConversationMessages(convoId, userId, messagePaginationDTO);
 		
 		return ResponseEntity.status(HttpStatus.OK).body(allMessages);
+	}
+	
+	@PostMapping("/conversations/{conversationId}/messages/latest")
+	public ResponseEntity<List<ConvoMessageDTO>> getLatestMessages(
+			@PathVariable("conversationId") String conversationId,
+			@RequestBody LatestMessageDTO latestMessageDTO,
+			@AuthenticationPrincipal Map<String, String> userDetails){
+		String userId= userDetails.get("userId");
+		
+		List<ConvoMessageDTO> latestMessages= conversationService.getLatestMessages(conversationId, userId, latestMessageDTO);
+		
+		return ResponseEntity.status(HttpStatus.OK).body(latestMessages);
 	}
 }

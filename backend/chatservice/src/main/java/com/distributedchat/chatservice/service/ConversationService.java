@@ -8,18 +8,21 @@ import com.distributedchat.chatservice.model.dto.Conversation.ConversationRespon
 import com.distributedchat.chatservice.model.dto.Conversation.ConversationUpdateDTO;
 import com.distributedchat.chatservice.model.dto.Conversation.ConvoMessageDTO;
 import com.distributedchat.chatservice.model.dto.Conversation.CreateOrFindDTO;
+import com.distributedchat.chatservice.model.dto.Message.LatestMessageDTO;
+import com.distributedchat.chatservice.model.dto.Message.MessagePaginationDTO;
 
 public interface ConversationService {
-	public ConversationResponseDTO createGroupConversation(ConversationGroupDTO conversationGroupDTO, String uid);
+	public ConversationDetailsListDTO createGroupConversation(ConversationGroupDTO conversationGroupDTO, String uid, String userName, String phone, String photo);
 	
-	public ConversationDetailsListDTO createOrFindConversation(CreateOrFindDTO createOrFindDTO, String uid);
+	public ConversationDetailsListDTO createOrFindConversation(CreateOrFindDTO createOrFindDTO, String uid, String userName, String phone, String photo);
 
 	public List<ConversationDetailsListDTO> getConversation(String uid);
 
-	//public void addUserToConversation(String userId, String convoId, ConversationUpdateDTO conversationUpdateDTO);
 	public ConversationResponseDTO editConversationDetails(ConversationUpdateDTO conversationUpdateDTO, String convoId, String userId);
 	
 	public ConversationResponseDTO addParticipants(ConversationUpdateDTO conversationUpdateDTO, String convoId, String userId);
 	
-	public List<ConvoMessageDTO> getAllConversationMessages(String convoId, String userId);
+	public List<ConvoMessageDTO> getAllConversationMessages(String convoId, String userId, MessagePaginationDTO messagePaginationDTO);
+
+	public List<ConvoMessageDTO> getLatestMessages(String convoId, String userId, LatestMessageDTO latestMessageDTO);
 }

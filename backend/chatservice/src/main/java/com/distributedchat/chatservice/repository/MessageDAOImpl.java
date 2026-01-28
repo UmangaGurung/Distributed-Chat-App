@@ -54,8 +54,11 @@ public class MessageDAOImpl implements MessageDAO{
 			message.setSenderId(uid);
 			
 			entityManager.persist(message);
+			
+			System.out.println(message.getMessageId());
 		
 			conversation.setLastMessage(message.getMessage());
+			conversation.setLastMessageId(message.getMessageId());
 			conversation.setUpdatedAt(LocalDateTime.now());
 			entityManager.merge(conversation);
 			

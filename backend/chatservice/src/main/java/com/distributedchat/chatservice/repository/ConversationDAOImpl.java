@@ -1,7 +1,9 @@
 package com.distributedchat.chatservice.repository;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -9,6 +11,8 @@ import org.springframework.stereotype.Repository;
 
 import com.distributedchat.chatservice.component.UserGrpcClient;
 import com.distributedchat.chatservice.model.dto.Conversation.ConversationResponseDTO;
+import com.distributedchat.chatservice.model.dto.Message.LatestMessageDTO;
+import com.distributedchat.chatservice.model.dto.Message.MessagePaginationDTO;
 import com.distributedchat.chatservice.model.dto.Message.MessageResponseDTO;
 import com.distributedchat.chatservice.model.entity.Conversation;
 import com.distributedchat.chatservice.model.entity.ConversationParticipants;
@@ -21,12 +25,10 @@ import jakarta.persistence.TypedQuery;
 public class ConversationDAOImpl implements ConversationDAO{
 	
 	private EntityManager entityManager;
-	//private UserGrpcClient grpcClient;
 	
 	public ConversationDAOImpl(EntityManager entityManager, UserGrpcClient grpcClient) {
 		// TODO Auto-generated constructor stub
 		this.entityManager= entityManager;
-		//this.grpcClient= grpcClient;
 	}
 
 	@Override
@@ -52,7 +54,7 @@ public class ConversationDAOImpl implements ConversationDAO{
 			}
 			entityManager.flush();
 			
-			return conversationDetails(conversation, participants);
+			return conversationDetails(conversation, participants, senderID);
 		}catch(Exception e) {
 			e.printStackTrace();
 			return null;
@@ -60,7 +62,7 @@ public class ConversationDAOImpl implements ConversationDAO{
 	}
 	
 	@Override
-	public ConversationResponseDTO createOrFindConversation(UUID userId, UUID participantId, String type) {
+	public Map<ConversationResponseDTO, Boolean> createOrFindConversation(UUID userId, UUID participantId, String type) {
 		// TODO Auto-generated method stub
 		try {
 			TypedQuery<Conversation> query= entityManager.createQuery(
@@ -80,7 +82,10 @@ public class ConversationDAOImpl implements ConversationDAO{
 			partiList.add(participantId);
 			partiList.add(userId);
 			
-			return conversationDetails(conversation, partiList);	
+			Map<ConversationResponseDTO, Boolean> result= new HashMap<>();
+			result.put(conversationDetails(conversation, partiList, null), false);
+			
+			return result;
 		}catch(NoResultException e) {
 			System.out.println("Convo not found,so creating one");
 			Conversation conversation= new Conversation();
@@ -105,7 +110,10 @@ public class ConversationDAOImpl implements ConversationDAO{
 			partiList.add(participantId);
 			partiList.add(userId);
 			
-			return conversationDetails(conversation, partiList);
+			Map<ConversationResponseDTO, Boolean> result= new HashMap<>();
+			result.put(conversationDetails(conversation, partiList, null), true);
+			
+			return result;
 		}catch (Exception e) {
 			e.printStackTrace();
 			return null;
@@ -132,7 +140,10 @@ public class ConversationDAOImpl implements ConversationDAO{
 						.map(ConversationParticipants::getUserId)
 						.collect(Collectors.toList());
 				
-				ConversationResponseDTO responseDTO= conversationDetails(conversation, conversationParticipantsUUID);
+				 UUID adminId= getConversationAdminId(conversation);
+				 
+				ConversationResponseDTO responseDTO= conversationDetails(
+						conversation, conversationParticipantsUUID, adminId);
 				
 				alluserConvos.add(responseDTO);
 			}
@@ -166,7 +177,9 @@ public class ConversationDAOImpl implements ConversationDAO{
 					.map(p -> p.getUserId())
 					.collect(Collectors.toList());
 			
-			return conversationDetails(conversation, participants);
+			UUID adminId= getConversationAdminId(conversation);
+			
+			return conversationDetails(conversation, participants, adminId);
 		}catch(Exception e) {
 			return null;
 		}
@@ -210,7 +223,9 @@ public class ConversationDAOImpl implements ConversationDAO{
 				conversation.getParticipants().add(participant);
 			}
 			
-			return conversationDetails(conversation, participantIds);
+			UUID adminId= getConversationAdminId(conversation);
+			
+			return conversationDetails(conversation, participantIds, adminId);
 		}catch (Exception e) {
 			e.printStackTrace();
 			return null;
@@ -218,7 +233,8 @@ public class ConversationDAOImpl implements ConversationDAO{
 	}
 
 	@Override
-	public List<MessageResponseDTO> getAllConversationMessages(UUID convoId, UUID userId) {
+	public List<MessageResponseDTO> getAllConversationMessages(
+			UUID convoId, UUID userId, MessagePaginationDTO messagePaginationDTO) {
 		// TODO Auto-generated method stub
 		try {
 			Conversation conversation= entityManager.find(Conversation.class, convoId);
@@ -231,35 +247,106 @@ public class ConversationDAOImpl implements ConversationDAO{
 				throw new SecurityException();
 			}
 			
+			if (messagePaginationDTO.isFirstFetch()) {
+				
+				TypedQuery<MessageResponseDTO> query= entityManager.createQuery(
+						"SELECT new com.distributedchat.chatservice.model.dto.Message.MessageResponseDTO("
+						+ "m.conversation.conversationId, "
+						+ "m.messageId, m.message, "
+						+ "m.type, m.senderId, m.createdAt) "
+						+ "FROM Message m WHERE m.conversation.conversationId=:convoId "
+						+ "ORDER BY m.createdAt DESC", MessageResponseDTO.class)
+						.setParameter("convoId", convoId)
+						.setMaxResults(messagePaginationDTO.getLimit());
+						
+				List<MessageResponseDTO> allMessages= query.getResultList();
+				
+				return allMessages;
+			}
+			
 			TypedQuery<MessageResponseDTO> query= entityManager.createQuery(
 					"SELECT new com.distributedchat.chatservice.model.dto.Message.MessageResponseDTO("
-					+ "m.conversation.conversationId, "
-					+ "m.messageId, m.message, "
-					+ "m.type, m.senderId, m.createdAt) "
+					+ "m.conversation.conversationId, m.messageId, "
+					+ "m.message, m.type, m.senderId, m.createdAt) "
 					+ "FROM Message m WHERE m.conversation.conversationId=:convoId "
+					+ "AND (m.createdAt < :timeStamp OR (m.createdAt=:timeStamp AND m.messageId < :messageId)) "
 					+ "ORDER BY m.createdAt DESC", MessageResponseDTO.class)
-					.setParameter("convoId", convoId);
-					
-			List<MessageResponseDTO> allMessages= query.getResultList();
+					.setParameter("convoId", convoId)
+					.setParameter("messageId", messagePaginationDTO.getMessageId())
+					.setParameter("timeStamp", messagePaginationDTO.getTimeStamp())
+					.setMaxResults(messagePaginationDTO.getLimit());
 			
-			return allMessages;
+			return query.getResultList();
 		}catch(Exception e) {
 			e.printStackTrace();
 			return null;
 		}
 	}
+
+	@Override
+	public List<MessageResponseDTO> getLatestMessages(UUID convoId, UUID userId, LatestMessageDTO latestMessageDTO) {
+		// TODO Auto-generated method stub
+		System.out.println("Inside dao");
+		try {
+			Conversation conversation= entityManager.find(Conversation.class, convoId);
+			
+			boolean exists= conversation.getParticipants().stream()
+					.anyMatch(p -> p.getUserId().equals(userId));
+			
+			if (!exists) {
+				throw new SecurityException();
+			}
+			
+			TypedQuery<MessageResponseDTO> query= entityManager.createQuery(
+					"SELECT new com.distributedchat.chatservice.model.dto.Message.MessageResponseDTO("
+					+ "m.conversation.conversationId, m.messageId, "
+					+ "m.message, m.type, "
+					+ "m.senderId, m.createdAt) "
+					+ "FROM Message m WHERE m.conversation.conversationId=:convoId "
+					+ "AND (m.createdAt > :timeStamp OR (m.createdAt=:timeStamp AND m.messageId > :messageId)) "
+					+ "ORDER BY m.createdAt DESC", MessageResponseDTO.class)
+					.setParameter("convoId", convoId)
+					.setParameter("timeStamp", latestMessageDTO.getTimeStamp())
+					.setParameter("messageId", latestMessageDTO.getMessageId());
+			
+			System.out.println("Inside dao");
+			System.out.println(query.getResultList());
+			
+			return query.getResultList();
+		}catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		}
+		return null;
+	}
 	
 	private ConversationResponseDTO conversationDetails(
 			Conversation conversation,
-			List<UUID> participants) {
+			List<UUID> participants, UUID adminId) {
 		return new ConversationResponseDTO(
 				conversation.getConversationId(), 
 				conversation.getName(), 
-				conversation.getLastMessage(), 
+				conversation.getLastMessage(),
+				conversation.getLastMessageId(),
 				participants, 
 				conversation.getUpdatedAt(),
-				conversation.getType()
+				conversation.getType(),
+				adminId
 				);
+	}
+	
+	private UUID getConversationAdminId(Conversation conversation) {
+		if (conversation.getType().equals("BINARY")) {
+			return null;
+		}
+		
+		UUID adminId= conversation.getParticipants().stream()
+				.filter(p -> "ADMIN".equals(p.getRole()))
+				.findAny()
+				.map(i -> i.getUserId())
+				.orElse(null);
+		
+		return adminId;
 	}
 }
 

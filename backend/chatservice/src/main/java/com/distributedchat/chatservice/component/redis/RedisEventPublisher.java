@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 public class RedisEventPublisher {
 	
 	private RedisTemplate<String, String> redisTemplate;
+	private static final String seperator= "\u2021";
 
 	public RedisEventPublisher(
 			@Qualifier("simpleRedisTemplate") RedisTemplate<String, String> redisTemplate) {
@@ -15,8 +16,8 @@ public class RedisEventPublisher {
 		this.redisTemplate= redisTemplate;
 	}
 	
-	public void publishTypingEvent(String userId, String scriptResult, String conversationId) {
-		String payload= conversationId+":"+userId+":"+scriptResult;
+	public void publishTypingEvent(String userId, String scriptResult, String conversationId, String userImage) {
+		String payload= conversationId+seperator+userId+seperator+userImage+seperator+scriptResult;
 		
 		redisTemplate.convertAndSend("chat:typing", payload);
 	}

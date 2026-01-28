@@ -17,6 +17,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import com.distributedchat.chatservice.component.redis.RedisEventSubscriber;
 import com.distributedchat.chatservice.component.redis.RedisMessageSubscriber;
+import com.distributedchat.chatservice.component.redis.RedisNewConversationEventSubscriber;
 import com.distributedchat.chatservice.component.redis.RedisTokenSubscriber;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -50,7 +51,8 @@ public class RedisConfig {
 				RedisConnectionFactory connectionFactory,
 				RedisMessageSubscriber redisMessageSubscriber,
 				RedisTokenSubscriber redisTokenSubscriber,
-				RedisEventSubscriber redisEventSubscriber) {
+				RedisEventSubscriber redisEventSubscriber,
+				RedisNewConversationEventSubscriber conversationEvent) {
 			RedisMessageListenerContainer redListenerContainer= new RedisMessageListenerContainer();
 			redListenerContainer.setConnectionFactory(connectionFactory);
 			redListenerContainer.addMessageListener(
@@ -65,8 +67,14 @@ public class RedisConfig {
 			
 			redListenerContainer.addMessageListener(
 					redisEventSubscriber,
-					new ChannelTopic("chat:typing"));
+					new ChannelTopic("chat:typing")
+			);
 			
+			redListenerContainer.addMessageListener(
+					conversationEvent,
+					new ChannelTopic("chat:conversation")
+					);
+	
 			return redListenerContainer;
 		}
 		

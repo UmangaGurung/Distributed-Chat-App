@@ -38,7 +38,8 @@ public class MessageController {
 		System.out.println(sessionAttributes.get("userId"));
 		
 		String userId= String.valueOf(sessionAttributes.get("userId"));
+		String userImage= String.valueOf(sessionAttributes.get("imagePath"));
 		
-		messageService.typingEvent(eventDTO, userId);
+		messageService.typingEvent(eventDTO, userId, userImage);
 	}
 }

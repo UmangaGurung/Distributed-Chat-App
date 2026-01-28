@@ -3,10 +3,14 @@ package com.distributedchat.chatservice.model.dto.Conversation;
 import java.util.List;
 import java.util.UUID;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class ConversationUpdateDTO {
 	
 	private String conversationName;
 	private List<UUID> userIds;
+	
+	@NotBlank
 	private UpdateType type;
 	
 	public ConversationUpdateDTO() {

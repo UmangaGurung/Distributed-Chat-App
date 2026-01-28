@@ -10,25 +10,41 @@ public class ConversationResponseDTO {
 	private UUID conversationID;
 	private String conversationName;
 	private String lastMessage;
+	private UUID lastMessageId;
 	private List<UUID> participantID= new ArrayList<>();
 	private LocalDateTime updatedAt;
 	private String type;
+	private UUID adminId;
 	
 	public ConversationResponseDTO() {
 		// TODO Auto-generated constructor stub
 	}
 	
 	public ConversationResponseDTO(UUID conversationID, String conversationName, String lastMessage,
-			List<UUID> participantID, LocalDateTime updatedAt, String type) {
+			UUID lastMessageId, List<UUID> participantID, LocalDateTime updatedAt, String type, UUID adminId) {
 		super();
 		this.conversationID = conversationID;
 		this.conversationName = conversationName;
 		this.lastMessage = lastMessage;
+		this.lastMessageId= lastMessageId;
 		this.participantID = participantID;
 		this.updatedAt = updatedAt;
 		this.type= type;
+		this.adminId= adminId;
 	}
 	
+	public UUID getLastMessageId() {
+		return lastMessageId;
+	}
+	public void setLastMessageId(UUID lastMessageId) {
+		this.lastMessageId = lastMessageId;
+	}
+	public UUID getAdminId() {
+		return adminId;
+	}
+	public void setAdminId(UUID adminId) {
+		this.adminId = adminId;
+	}
 	public String getType() {
 		return type;
 	}

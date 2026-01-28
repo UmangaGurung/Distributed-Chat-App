@@ -45,6 +45,7 @@ public class RedisCaching {
 		RedisUserInfoDTO results= getListOfCacheUserInfo(stringUsersId);
 		List<String> missingInfoIds= results.getUserIdList();
 		System.out.println(missingInfoIds);
+		
 		if (!missingInfoIds.isEmpty()) {
 			List<UserDetailGrpcDTO> missingInfos= new ArrayList<>();
 			

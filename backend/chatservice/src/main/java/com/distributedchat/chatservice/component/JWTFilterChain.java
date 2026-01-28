@@ -2,6 +2,7 @@ package com.distributedchat.chatservice.component;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -10,6 +11,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.distributedchat.chatservice.component.redis.RedisTokenBlackList;
 
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,7 +37,8 @@ public class JWTFilterChain extends OncePerRequestFilter{
 	
 		if (authHeader!=null) {
 			String token= authHeader.substring(7);
-			String tokenId= jwtService.extractClaims(token).getId();
+			Claims claims= jwtService.extractClaims(token);
+			String tokenId= claims.getId();
 			
 			if (blackList.isTokenBlackListed(tokenId)) {
 				System.out.println("Token blacklisted");
@@ -48,10 +51,15 @@ public class JWTFilterChain extends OncePerRequestFilter{
 				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 				return;
 			}
+
+			Map<String, String> details= Map.of(
+					"userId", claims.getSubject().toString(),
+					"userName", claims.get("fullname").toString(),
+					"phone", claims.get("phone").toString(),
+					"photo", claims.get("imagepath").toString()
+					);
 			
-			String uid= jwtService.getUserId(token);
-			
-			UsernamePasswordAuthenticationToken authToken= new UsernamePasswordAuthenticationToken(uid, null, List.of());
+			UsernamePasswordAuthenticationToken authToken= new UsernamePasswordAuthenticationToken(details, null, List.of());
 			SecurityContextHolder.getContext().setAuthentication(authToken);
 		}
 		filterChain.doFilter(request, response);
