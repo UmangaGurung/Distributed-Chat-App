@@ -6,6 +6,7 @@ import 'package:chatfrontend/presentation/screens/chatscreen.dart';
 import 'package:chatfrontend/presentation/screens/welcome.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:chatfrontend/constants.dart' as constColor;
@@ -13,6 +14,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: "assets/.env");
   //debugPaintSizeEnabled=true;
   await Hive.initFlutter();
   Hive.registerAdapter(HiveMessageModelAdapter());

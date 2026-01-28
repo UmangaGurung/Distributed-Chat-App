@@ -63,7 +63,7 @@ flutter_native_splash:
   # general image for all platform (except android 12+):
   # allows you to specify an image used in the splash screen. It must be a
   # png file and should be sized for 4x pixel density.
-  image:                assets/icon/logo-removebg.png
+  image:                assets/icon/logo.png
   #image_dark:          assets/splash-invert.png
   # platform-specific image. will override general image if active:
   #image_android:       assets/splash-android.png
@@ -74,7 +74,7 @@ flutter_native_splash:
   #image_dark_web:      assets/splash-invert-web.gif
 
   # image alignment (default center if not specified, or speccified something else):
-  #android_gravity: center       # bottom, center, center_horizontal, center_vertical,
+  android_gravity: center       # bottom, center, center_horizontal, center_vertical,
   # clip_horizontal, clip_vertical, end, fill, fill_horizontal, fill_vertical, left, right, start, top. could also be a combination like `android_gravity: fill|clip_vertical`
   # This will fill the width while maintaining the image's vertical aspect ratio.
   # visit https://developer.android.com/reference/android/view/Gravity

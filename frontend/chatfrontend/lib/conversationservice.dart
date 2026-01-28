@@ -19,7 +19,7 @@ class ConversationAPIService {
     String userId,
   ) async {
     try {
-      final url = Uri.parse(conversationUrl + "/direct-messages");
+      final url = Uri.parse("$conversationUrl/direct-messages");
 
       final response = await http.post(
         url,
@@ -49,6 +49,40 @@ class ConversationAPIService {
       return null;
     }
     return null;
+  }
+  
+  Future<ConversationAndUserDetailsDTO> createGroupConversation(String token, String groupName, List<String> userIdList) async{
+    final url= Uri.parse("$conversationUrl/groups");
+
+    try{
+      final response= await http.post(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json'
+        },
+        body: jsonEncode({
+          'name': groupName,
+          'type': 'GROUP',
+          'participants': userIdList
+        })
+      );
+
+      if (response.statusCode==200){
+        print(response.body);
+        Map<String, dynamic> data= jsonDecode(response.body);
+        print(data);
+
+        return ConversationAndUserDetailsDTO(
+            conversationResponseDTO: ConversationResponseDTO.fromJson(data['conversationResponseDTO']),
+            participantDetailsDTO: null
+        );
+      }
+      throw Exception("Error creating");
+    }catch(e){
+      print(e);
+      throw Exception("Error creating group");
+    }
   }
 
   Future<List<MessageDetailsDTO>> getConversationMessages(

@@ -2,6 +2,7 @@ import 'package:chatfrontend/cache/service/hiveuserservice.dart';
 import 'package:chatfrontend/dto/conversation/participantdetails.dart';
 import 'package:chatfrontend/dto/usersearchresult.dart';
 import 'package:chatfrontend/presentation/providers/tokenprovider.dart';
+import 'package:chatfrontend/presentation/screens/chat/creategroupcontinue.dart';
 import 'package:chatfrontend/tokenservice.dart';
 import 'package:chatfrontend/userapiservice.dart';
 import 'package:flutter/material.dart';
@@ -85,10 +86,6 @@ class _CreateGroupState extends ConsumerState<CreateGroup> {
   }
 
   void onSearchChanged(String input) async {
-    print("Mutating map ${userMap.keys.toList()}");
-    print("Constant map ${constUserMap.keys.toList()}");
-    print(input);
-
     List<String> matchedPhones = cachedUserPhone
         .where((p) => p.startsWith(input))
         .toList();
@@ -98,8 +95,6 @@ class _CreateGroupState extends ConsumerState<CreateGroup> {
         (u) => matchedPhones.contains(u.value.phoneNumber),
       ),
     );
-
-    print(filtered.keys);
 
     setState(() {
       userMap = filtered;
@@ -168,7 +163,26 @@ class _CreateGroupState extends ConsumerState<CreateGroup> {
           iconSize: 30,
         ),
         titleSpacing: 0,
-        actions: <Widget>[const Icon(Pixel.userplus)],
+        actions: <Widget>[
+          GestureDetector(
+            onTap: () {
+              final List<ParticipantDetails> selectedUsers = constUserMap
+                  .entries
+                  .where((k) => selectedUserIdList.contains(k.key))
+                  .map((k) => k.value)
+                  .toList();
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      CreateGroupContinue(userDetails: selectedUsers),
+                ),
+              );
+            },
+            child: const Icon(Pixel.userplus),
+          ),
+        ],
         actionsPadding: const EdgeInsets.only(right: 40),
         actionsIconTheme: IconThemeData(
           color: selectedUserMap.values.any((b) => b)
@@ -221,8 +235,8 @@ class _CreateGroupState extends ConsumerState<CreateGroup> {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   scrollDirection: Axis.horizontal,
                   itemCount: selectedUserIdList.length,
-                  separatorBuilder: (context, index){
-                    return const SizedBox(width: 15,);
+                  separatorBuilder: (context, index) {
+                    return const SizedBox(width: 15);
                   },
                   itemBuilder: (context, index) {
                     final String userId = selectedUserIdList.elementAt(index);
@@ -240,7 +254,7 @@ class _CreateGroupState extends ConsumerState<CreateGroup> {
                               height: 45,
                             ),
                           ),
-                          const SizedBox(height: 5,),
+                          const SizedBox(height: 5),
                           Text(
                             user.userName,
                             maxLines: 1,
@@ -256,7 +270,7 @@ class _CreateGroupState extends ConsumerState<CreateGroup> {
                   },
                 ),
               ),
-            const SizedBox(height: 15),
+            const SizedBox(height: 10),
             Expanded(
               child: ListView.builder(
                 itemCount: userMap.length + (apiFetch ? 1 : 0),
