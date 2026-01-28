@@ -1,6 +1,5 @@
 package com.distributedchat.chatservice.controller;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -38,16 +37,18 @@ public class ConversationController {
 	}
 	
 	@PostMapping("/conversations/groups")
-	public ResponseEntity<Map<String, Object>> createGroupConversation(
+	public ResponseEntity<ConversationDetailsListDTO> createGroupConversation(
 			@RequestBody ConversationGroupDTO conversationGroupDTO,
 			@AuthenticationPrincipal Map<String, String> userDetails){
 		String uid= userDetails.get("userId");
+		String userName= userDetails.get("userName");
+		String phone= userDetails.get("phone");
+		String photo= userDetails.get("photo");
 		
-		ConversationResponseDTO conversation= conversationService.createGroupConversation(conversationGroupDTO, uid);
-		Map<String, Object> response= new HashMap<>();
-		response.put("response", conversation);
-		
-		return ResponseEntity.status(HttpStatus.OK).body(response);
+		ConversationDetailsListDTO conversation=
+				conversationService.createGroupConversation(conversationGroupDTO, uid, userName, phone, photo);
+	
+		return ResponseEntity.status(HttpStatus.OK).body(conversation);
 	}
 	
 	@PostMapping("/conversations/direct-messages")

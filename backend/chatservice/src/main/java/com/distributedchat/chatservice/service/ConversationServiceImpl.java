@@ -50,12 +50,16 @@ public class ConversationServiceImpl implements ConversationService {
 	}
 	
 	@Override
-	public ConversationResponseDTO createGroupConversation(ConversationGroupDTO conversationdDto, String uid) {
+	public ConversationDetailsListDTO createGroupConversation(
+			ConversationGroupDTO conversationdDto, String uid, String userName, String phone, String photo) {
 		// TODO Auto-generated method stub
 		String convoType= conversationdDto.getType();
 		String convoName= conversationdDto.getName();
 		
+		List<UUID> participants= conversationdDto.getParticipants();
+
 		UUID senderId= UUID.fromString(uid);
+		participants.add(senderId);
 		
 		if (!convoType.equals("GROUP")) {
 			throw new IllegalArgumentException("Goup convo type mismatch");
@@ -65,7 +69,12 @@ public class ConversationServiceImpl implements ConversationService {
 				&& conversationdDto.getParticipants().contains(senderId)) {
 			throw new IllegalArgumentException("Goup convo with same user cant be created");
 		}
-		return conversationDAO.createGroupConversation(convoType, convoName, conversationdDto.getParticipants(), senderId);
+		ConversationResponseDTO conversation= conversationDAO.createGroupConversation(convoType, convoName, participants, senderId);
+		
+		conversationEventPublisher.publishNewConversation(
+				new ConversationDetailsListDTO(conversation, new UserDetailGrpcDTO(senderId, userName, photo, phone)));
+		
+		return new ConversationDetailsListDTO(conversation, null);
 	}
 	
 	@Override

@@ -12,7 +12,7 @@ import com.distributedchat.chatservice.model.dto.Message.LatestMessageDTO;
 import com.distributedchat.chatservice.model.dto.Message.MessagePaginationDTO;
 
 public interface ConversationService {
-	public ConversationResponseDTO createGroupConversation(ConversationGroupDTO conversationGroupDTO, String uid);
+	public ConversationDetailsListDTO createGroupConversation(ConversationGroupDTO conversationGroupDTO, String uid, String userName, String phone, String photo);
 	
 	public ConversationDetailsListDTO createOrFindConversation(CreateOrFindDTO createOrFindDTO, String uid, String userName, String phone, String photo);
 

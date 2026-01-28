@@ -1,6 +1,7 @@
 package com.distributedchat.chatservice.component.redis;
 
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
@@ -46,12 +47,23 @@ public class RedisNewConversationEventSubscriber implements MessageListener{
 					.findFirst()
 					.orElse(null).toString();
 			
+			if (conversationDetailsListDTO.getConversationResponseDTO().getType().equals("BINARY")) {
 			String destination= "/topic/event/"+participantId;
 			
 			messagingTemplate.convertAndSend(
 					destination,
 					conversationDetailsListDTO
 					);
+			}else {
+				for (UUID userId: conversationDetailsListDTO.getConversationResponseDTO().getParticipantID()) {
+					String destination= "/topic/event/"+userId;
+					
+					messagingTemplate.convertAndSend(
+							destination,
+							conversationDetailsListDTO
+							);
+				}
+			}
 		}catch (Exception e) {
 			// TODO: handle exception
 			e.printStackTrace();
