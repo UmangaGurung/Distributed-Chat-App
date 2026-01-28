@@ -23,6 +23,7 @@ target/
 build/
 out/
 .gradle/
+.src/main/resources/application.properties
 *.jar
 *.class
 
