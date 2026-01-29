@@ -327,9 +327,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     child: OutlinedButton.icon(
                       onPressed: () async {
                         final authService= ref.read(tokenProvider.notifier);
+
                         GoogleRegisterResponse response= await userservice.signInWithGoogle(authService);
-                        if (response.status=="GOOGLE_LOGIN"
-                            && response.loginResult==LoginResult.SUCCESS) {
+                        if (response.loginResult==LoginResult.SUCCESS) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text("SUCCESS")),
                           );
@@ -338,8 +338,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             MaterialPageRoute(builder: (context) => Chatscreen()),
                                 (Route<dynamic> route) => false,
                           );
-                        }else if (response.status=="GOOGLE_LOGIN"
-                            && response.loginResult==LoginResult.INCOMPLETE_PROFILE){
+                        }else if (response.loginResult==LoginResult.INCOMPLETE_PROFILE){
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text("PLEASE COMPLETE YOUR PROFILE")),
                           );

@@ -27,33 +27,6 @@ void main() async {
   runApp(ProviderScope(child: ChatApp()));
 }
 
-Future<void> inspectHive() async{
-  final indexBox = Hive.box('conversationIndex');
-  final ttlBox = Hive.box<DateTime>('dataTTL');
-  final messageBox = Hive.box<HiveMessageModel>('messages');
-  final userBox= Hive.box<HiveUserModel>('user');
-  await indexBox.clear();
-  await ttlBox.clear();
-  await messageBox.clear();
-  await userBox.clear();
-
-  print('=== INDEX BOX ===');
-  print('Keys: ${indexBox.keys.toList()}');
-  for (var key in indexBox.keys) {
-    print('$key: ${indexBox.get(key)}');
-  }
-
-  print('\n=== TTL BOX ===');
-  print('Keys: ${ttlBox.keys.toList()}');
-  for (var key in ttlBox.keys) {
-    print('$key: ${ttlBox.get(key)}');
-  }
-
-  print('\n=== MESSAGE BOX ===');
-  print('Keys: ${messageBox.keys.toList()}');
-  print('Count: ${messageBox.length}');
-}
-
 class ChatApp extends ConsumerWidget {
   const ChatApp({super.key});
 

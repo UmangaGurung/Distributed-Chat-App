@@ -65,16 +65,12 @@ class UserAPIService {
         final Map<String, dynamic> data = jsonDecode(response.body);
         print(data['message']);
         print(data['status']);
+        print(data['token']);
 
         if (data['token'] != null &&
-            data['token'] != "" &&
-            data['status'] == "GOOGLE_LOGIN") {
-          // final tokenService = Provider.of<TokenService>(
-          //   context,
-          //   listen: false,
-          // );
+            data['token'] != "") {
+
           await authService.assignToken(token: data['token']);
-          //await tokenService.assignToken(token: data['token']);
 
           Map<String, dynamic> claims = authService.tokenDecode();
           if (claims['phone'] == null) {
@@ -83,12 +79,13 @@ class UserAPIService {
               data['status'],
               LoginResult.INCOMPLETE_PROFILE,
             );
+          }else{
+            return GoogleRegisterResponse(
+              data['message'],
+              data['status'],
+              LoginResult.SUCCESS,
+            );
           }
-          return GoogleRegisterResponse(
-            data['message'],
-            data['status'],
-            LoginResult.SUCCESS,
-          );
         } else {
           return GoogleRegisterResponse(
             data['message'],
@@ -125,6 +122,8 @@ class UserAPIService {
       print("No profile image selected");
       return RegisterResponse("No profile image selected", "FAILED");
     }
+    print("__________REGISTER________");
+    print(profileImage);
 
     try {
       final url = Uri.parse(userurl + "/signup");
@@ -136,6 +135,8 @@ class UserAPIService {
       request.fields['phone'] = phone;
 
       String? mimetype = lookupMimeType(profileImage.path);
+      print(profileImage.path);
+      print(mimetype);
       var picfile = await http.MultipartFile.fromPath(
         'profilepicture',
         profileImage.path,
@@ -144,6 +145,7 @@ class UserAPIService {
             : http_parser.MediaType('application', 'octet-stream'),
         filename: basename(profileImage.path),
       );
+      print(picfile);
 
       request.files.add(picfile);
 
