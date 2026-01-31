@@ -35,7 +35,6 @@ public class Message {
 	@Column(nullable = false, updatable = false)
 	private UUID senderId;
 	
-	@CreatedDate
 	@Column(nullable = false, updatable = false)
 	private LocalDateTime createdAt;
 	

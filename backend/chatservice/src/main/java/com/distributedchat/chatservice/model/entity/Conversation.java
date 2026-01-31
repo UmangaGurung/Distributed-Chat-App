@@ -50,11 +50,9 @@ public class Conversation {
 	@JsonIgnore
 	private List<ConversationParticipants> participants= new ArrayList<>();
 	
-	@CreatedDate
 	@Column(nullable = false, updatable = false)
 	private LocalDateTime createdAt;
 	
-	@LastModifiedDate
 	private LocalDateTime updatedAt;
 
 	public Conversation() {

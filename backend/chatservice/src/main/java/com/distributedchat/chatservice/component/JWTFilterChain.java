@@ -51,11 +51,18 @@ public class JWTFilterChain extends OncePerRequestFilter{
 				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 				return;
 			}
+			
+			String phone;
+			if (claims.get("phone")==null) {
+				phone = "N/A";
+			}else {
+				phone= claims.get("phone").toString();
+			}
 
 			Map<String, String> details= Map.of(
 					"userId", claims.getSubject().toString(),
 					"userName", claims.get("fullname").toString(),
-					"phone", claims.get("phone").toString(),
+					"phone", phone,
 					"photo", claims.get("imagepath").toString()
 					);
 			

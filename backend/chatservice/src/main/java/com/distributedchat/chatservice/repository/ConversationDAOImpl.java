@@ -1,5 +1,6 @@
 package com.distributedchat.chatservice.repository;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -171,6 +172,7 @@ public class ConversationDAOImpl implements ConversationDAO{
 			}
 			
 			conversation.setName(conversationName);
+			conversation.setUpdatedAt(LocalDateTime.now());
 			
 			List<UUID> participants= conversation.getParticipants()
 					.stream()
@@ -221,8 +223,10 @@ public class ConversationDAOImpl implements ConversationDAO{
 				
 				participantIds.add(uid);
 				conversation.getParticipants().add(participant);
+				conversation.setUpdatedAt(LocalDateTime.now());
 			}
 			
+			entityManager.flush();
 			UUID adminId= getConversationAdminId(conversation);
 			
 			return conversationDetails(conversation, participantIds, adminId);
