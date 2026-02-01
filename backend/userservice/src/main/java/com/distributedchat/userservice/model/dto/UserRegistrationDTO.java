@@ -1,24 +1,18 @@
 package com.distributedchat.userservice.model.dto;
 
-import com.sun.istack.NotNull;
-
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
 
 public class UserRegistrationDTO {
 	
-	@NotNull
 	@Email
 	private String email;
-	
-	@NotNull
+
 	@Size(min=4, max = 30)
 	private String fullname;
-	
-	@NotNull 
+	 
 	private String password;
 	
-	@NotNull
 	private String phone;
 	
 	public String getEmail() {

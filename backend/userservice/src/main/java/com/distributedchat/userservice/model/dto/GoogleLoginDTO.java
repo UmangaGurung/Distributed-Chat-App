@@ -1,21 +1,16 @@
 package com.distributedchat.userservice.model.dto;
 
-import com.sun.istack.NotNull;
-
 import jakarta.validation.constraints.Email;
 
 public class GoogleLoginDTO {
 	
-	@NotNull
 	@Email
 	private String email;
-	
-	@NotNull
+
 	private String tokenid;
 	
 	private String photo;
-	
-	@NotNull
+
 	private String name;
 
 	public String getEmail() {
