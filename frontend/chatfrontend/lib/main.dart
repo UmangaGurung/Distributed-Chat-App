@@ -1,4 +1,3 @@
-import 'package:chatfrontend/cache/model/conversationcache.dart';
 import 'package:chatfrontend/cache/model/messagecache.dart';
 import 'package:chatfrontend/cache/model/userdetailscache.dart';
 import 'package:chatfrontend/presentation/providers/tokenprovider.dart';
@@ -40,10 +39,14 @@ class ChatApp extends ConsumerWidget {
       home: tokenState.when(
         data: (token) {
           final auth = ref.read(tokenProvider.notifier);
-          if (auth.token == ''){
+          final claims= auth.tokenDecode();
+          if (auth.token == '' || claims['phone']==null){
             print("TOKEN UNASSIGNED");
+            WidgetsBinding.instance.addPostFrameCallback((_){
+              auth.clearToken();
+            });
           }
-          return auth.isAuthenticated ? const Chatscreen() : Welcome();
+          return auth.isAuthenticated || claims['phone']!=null ? const Chatscreen() : Welcome();
         },
         error: (error, stackTrace) {
           return const Welcome();

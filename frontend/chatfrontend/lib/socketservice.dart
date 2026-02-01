@@ -28,7 +28,7 @@ class SocketService {
   static const String separator = '\u2021';
 
   void connectToWebSocket(String token, String userId) {
-    print("connectToWebSocket called");
+
     if (isConnected) {
       print("Already connected");
       return;
@@ -75,9 +75,7 @@ class SocketService {
   }
 
   void newConversationEvent(StompFrame frame) {
-    print("Recieved convo Event");
     final body = jsonDecode(frame.body!);
-    print(body);
 
     ConversationAndUserDetailsDTO conversationAndUserDetailsDTO =
         ConversationAndUserDetailsDTO(
@@ -115,17 +113,12 @@ class SocketService {
   }
 
   void callback(StompFrame frame) {
-    print("Received on topic: ${frame.headers}");
-
     final body = frame.body!;
     final jsonMsg = jsonDecode(body);
     final messageId = jsonMsg['messageResponse']['messageId'];
 
     if (_seenMessageIds.contains(messageId)) return;
     _seenMessageIds.add(messageId);
-
-    print(jsonMsg['messageResponse']);
-    print(jsonMsg['senderDetails']);
 
     MessageDetailsDTO messageDetailsDTO = MessageDetailsDTO(
       messageResponseDTO: MessageResponseDTO.fromJson(
@@ -160,12 +153,9 @@ class SocketService {
   }
 
   void callbackTypingEvent(StompFrame frame) {
-    print("Received on topic: ${frame.headers}");
-
     final body = frame.body;
 
     List<String> payload = body!.split(separator);
-    print(payload);
 
     typingEventState.setTypingEvent(payload);
   }
@@ -173,8 +163,6 @@ class SocketService {
   void callbackSuccessfullySent(StompFrame frame) {
     print("Message successfully sent");
     final response = jsonDecode(frame.body!);
-
-    print(response);
 
     ParticipantDetails participantDetails = ParticipantDetails(
       userId: '',

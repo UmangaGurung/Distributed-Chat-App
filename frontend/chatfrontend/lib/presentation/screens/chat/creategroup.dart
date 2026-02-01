@@ -108,13 +108,13 @@ class _CreateGroupState extends ConsumerState<CreateGroup> {
         apiFetch = true;
       });
 
-      final UserSearchResult response = await userAPIService.searchUsers(
+      final response = await userAPIService.searchUsers(
         token,
         input,
       );
 
       ParticipantDetails participantDetails = ParticipantDetails(
-        userId: response.userId,
+        userId: response!.userId,
         userName: response.fullname,
         photoUrl: response.imageURL,
         phoneNumber: response.phoneNumber,

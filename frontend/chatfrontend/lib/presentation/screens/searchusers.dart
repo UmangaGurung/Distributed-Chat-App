@@ -49,6 +49,7 @@ class _SearchUsersState extends ConsumerState<SearchUsers> {
   void initState() {
     super.initState();
     tokenService= ref.read(tokenProvider.notifier);
+    userInfo= List.empty();
   }
 
   void onSearchChanged(String search) {
@@ -71,7 +72,7 @@ class _SearchUsersState extends ConsumerState<SearchUsers> {
 
         final token= tokenService.token;
 
-        final result = await userService.searchUsers(token, search);
+        final UserSearchResult result = await userService.searchUsers(token, search);
 
         if (!mounted){
           return;
@@ -193,7 +194,7 @@ class _SearchUsersState extends ConsumerState<SearchUsers> {
                         ),
                       );
                     }),
-                    if (userInfo != null)
+                    if (userInfo != null && userInfo!.isNotEmpty)
                       Padding(
                         padding: EdgeInsets.all(contentContainerHeight*0.04),
                         child: Column(
