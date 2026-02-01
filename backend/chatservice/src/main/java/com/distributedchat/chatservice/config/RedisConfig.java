@@ -1,6 +1,7 @@
 package com.distributedchat.chatservice.config;
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
@@ -79,11 +80,14 @@ public class RedisConfig {
 		}
 		
 		@Bean("connectionDB2")
-		LettuceConnectionFactory redisConnectionDB2() {
+		LettuceConnectionFactory redisConnectionDB2(
+				@Value("${spring.data.redis.host}") String host,
+				@Value("${spring.data.redis.port}") int port,
+				@Value("${spring.data.redis.password}") String password) {
 			RedisStandaloneConfiguration configuration= new RedisStandaloneConfiguration();
-			configuration.setHostName("localhost");
-			configuration.setPort(6379);
-			configuration.setPassword("redispassword");
+			configuration.setHostName(host);
+			configuration.setPort(port);
+			configuration.setPassword(password);
 			configuration.setDatabase(2);
 			
 			return new LettuceConnectionFactory(configuration);
