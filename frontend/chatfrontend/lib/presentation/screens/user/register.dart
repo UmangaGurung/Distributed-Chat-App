@@ -29,7 +29,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   final emailRe = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]{2,}$');
 
-  final userservice= UserAPIService();
+  final userservice = UserAPIService();
 
   @override
   Widget build(BuildContext context) {
@@ -50,16 +50,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  SizedBox(height: 40,),
+                  SizedBox(height: 40),
                   SizedBox(
                     width: 150,
                     height: 90,
-                    child: Image.asset('assets/icon/logo.png',
+                    child: Image.asset(
+                      'assets/icon/logo.png',
                       fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
                           color: constants.blackcolor,
-                          child: Icon(Icons.image, size: 50, color: Colors.grey[400]),
+                          child: Icon(
+                            Icons.image,
+                            size: 50,
+                            color: Colors.grey[400],
+                          ),
                         );
                       },
                     ),
@@ -111,9 +116,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       ),
                       validator: (value) {
                         final v = value?.trim() ?? '';
-                        if (v.isEmpty) return "Please enter your email";
-                        if (!emailRe.hasMatch(v))
+                        if (v.isEmpty) {
+                          return "Please enter your email";
+                        }
+                        if (!emailRe.hasMatch(v)) {
                           return "Please enter a valid email";
+                        }
                         return null;
                       },
                     ),
@@ -326,31 +334,40 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     alignment: Alignment.center,
                     child: OutlinedButton.icon(
                       onPressed: () async {
-                        final authService= ref.read(tokenProvider.notifier);
-                        GoogleRegisterResponse response= await userservice.signInWithGoogle(authService);
-                        if (response.status=="GOOGLE_LOGIN"
-                            && response.loginResult==LoginResult.SUCCESS) {
+                        final authService = ref.read(tokenProvider.notifier);
+
+                        GoogleRegisterResponse response = await userservice
+                            .signInWithGoogle(authService);
+                        if (response.loginResult == LoginResult.SUCCESS) {
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(SnackBar(content: Text("SUCCESS")));
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => Chatscreen(),
+                            ),
+                            (Route<dynamic> route) => false,
+                          );
+                        } else if (response.loginResult ==
+                            LoginResult.INCOMPLETE_PROFILE) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("SUCCESS")),
+                            SnackBar(
+                              content: Text("PLEASE COMPLETE YOUR PROFILE"),
+                            ),
                           );
                           Navigator.pushAndRemoveUntil(
                             context,
-                            MaterialPageRoute(builder: (context) => Chatscreen()),
-                                (Route<dynamic> route) => false,
+                            MaterialPageRoute(
+                              builder: (context) => AddPhoneNumber(),
+                            ),
+                            (Route<dynamic> route) => false,
                           );
-                        }else if (response.status=="GOOGLE_LOGIN"
-                            && response.loginResult==LoginResult.INCOMPLETE_PROFILE){
+                        } else {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("PLEASE COMPLETE YOUR PROFILE")),
-                          );
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(builder: (context) => AddPhoneNumber()),
-                                (Route<dynamic> route) => false,
-                          );
-                        }else{
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Error. ${response.response}")),
+                            SnackBar(
+                              content: Text("Error. ${response.response}"),
+                            ),
                           );
                         }
                       },

@@ -1,4 +1,3 @@
-import 'package:chatfrontend/cache/model/conversationcache.dart';
 import 'package:chatfrontend/cache/model/messagecache.dart';
 import 'package:chatfrontend/cache/model/userdetailscache.dart';
 import 'package:chatfrontend/presentation/providers/tokenprovider.dart';
@@ -27,33 +26,6 @@ void main() async {
   runApp(ProviderScope(child: ChatApp()));
 }
 
-Future<void> inspectHive() async{
-  final indexBox = Hive.box('conversationIndex');
-  final ttlBox = Hive.box<DateTime>('dataTTL');
-  final messageBox = Hive.box<HiveMessageModel>('messages');
-  final userBox= Hive.box<HiveUserModel>('user');
-  await indexBox.clear();
-  await ttlBox.clear();
-  await messageBox.clear();
-  await userBox.clear();
-
-  print('=== INDEX BOX ===');
-  print('Keys: ${indexBox.keys.toList()}');
-  for (var key in indexBox.keys) {
-    print('$key: ${indexBox.get(key)}');
-  }
-
-  print('\n=== TTL BOX ===');
-  print('Keys: ${ttlBox.keys.toList()}');
-  for (var key in ttlBox.keys) {
-    print('$key: ${ttlBox.get(key)}');
-  }
-
-  print('\n=== MESSAGE BOX ===');
-  print('Keys: ${messageBox.keys.toList()}');
-  print('Count: ${messageBox.length}');
-}
-
 class ChatApp extends ConsumerWidget {
   const ChatApp({super.key});
 
@@ -67,10 +39,14 @@ class ChatApp extends ConsumerWidget {
       home: tokenState.when(
         data: (token) {
           final auth = ref.read(tokenProvider.notifier);
-          if (auth.token == ''){
+          final claims= auth.tokenDecode();
+          if (auth.token == '' || claims['phone']==null){
             print("TOKEN UNASSIGNED");
+            WidgetsBinding.instance.addPostFrameCallback((_){
+              auth.clearToken();
+            });
           }
-          return auth.isAuthenticated ? const Chatscreen() : Welcome();
+          return auth.isAuthenticated || claims['phone']!=null ? const Chatscreen() : Welcome();
         },
         error: (error, stackTrace) {
           return const Welcome();

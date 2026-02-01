@@ -118,7 +118,9 @@ class _UserProfileState extends ConsumerState<UserProfile> {
                           children: [
                             Text(
                               details.entries.elementAt(index).key,
-                              style: TextStyle(color: constColor.cyancolor),
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: constColor.cyancolor
+                              ),
                             ),
                             if (userDetail[index].length > 15)
                               SizedBox(
@@ -165,6 +167,7 @@ class _UserProfileState extends ConsumerState<UserProfile> {
                 ref.invalidate(conversationProvider);
                 ref.invalidate(messageProvider);
                 ref.invalidate(eventProvider);
+
                 await userBox.clearHiveCache();
                 await messageBox.clearMessageCache();
                 await tokenService.clearToken();

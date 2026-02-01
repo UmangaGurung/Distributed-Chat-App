@@ -23,7 +23,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   bool _obscurePassword = true;
 
-  final userservice= UserAPIService();
+  final userService= UserAPIService();
+
+  final emailRe = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]{2,}$');
 
   @override
   Widget build(BuildContext context) {
@@ -108,6 +110,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           borderSide: BorderSide(color: constants.magentacolor),
                         ),
                       ),
+                      validator: (value) {
+                        if (value==null || value.isEmpty){
+                          return "Please enter an email";
+                        }
+                        if (!emailRe.hasMatch(value)){
+                          return "Please enter a valid email address";
+                        }
+                        return null;
+                      },
                     ),
                   ),
                   SizedBox(height: 25),
@@ -163,7 +174,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return "Please re-enter your password";
+                          return "Please enter your password";
                         }
                         if (value.length < 6) {
                           return "Password is too short";
@@ -271,9 +282,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       onPressed: () async {
                         final authService= ref.read(tokenProvider.notifier);
 
-                        GoogleRegisterResponse response= await userservice.signInWithGoogle(authService);
-                        if (response.status=="GOOGLE_LOGIN"
-                            && response.loginResult==LoginResult.SUCCESS) {
+                        GoogleRegisterResponse response= await userService.signInWithGoogle(authService);
+                        if (response.loginResult==LoginResult.SUCCESS) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text("SUCCESS")),
                           );
@@ -282,8 +292,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             MaterialPageRoute(builder: (context) => Chatscreen()),
                                 (Route<dynamic> route) => false,
                           );
-                        }else if (response.status=="GOOGLE_LOGIN"
-                            && response.loginResult==LoginResult.INCOMPLETE_PROFILE){
+                        }else if (response.loginResult==LoginResult.INCOMPLETE_PROFILE){
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text("PLEASE COMPLETE YOUR PROFILE")),
                           );

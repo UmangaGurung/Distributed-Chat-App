@@ -5,6 +5,7 @@ import 'package:chatfrontend/presentation/providers/conversationstate.dart';
 import 'package:chatfrontend/presentation/providers/tokenprovider.dart';
 import 'package:chatfrontend/presentation/providers/typingeventstate.dart';
 import 'package:chatfrontend/socketservice.dart';
+import 'package:chatfrontend/tokenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 
@@ -17,7 +18,7 @@ final socketService = Provider<SocketService>((ref) {
   final socket = SocketService(chatMessageState, typingEventState, conversationState);
 
   tokenAsync.whenData((token) {
-    print("TOKEN CHECK AT SOCKET PROVIDER $token");
+    print("TOKEN CHECK AT SOCKET PROVIDER");
     if (token != null && !JwtDecoder.isExpired(token)) {
       if (!socket.isConnected) {
         final claims = JwtDecoder.decode(token);

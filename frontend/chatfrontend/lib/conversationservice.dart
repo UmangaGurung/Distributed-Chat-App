@@ -32,8 +32,6 @@ class ConversationAPIService {
 
       if (response.statusCode == 200) {
         Map<String, dynamic> data = jsonDecode(response.body);
-        print(data['conversationDetails']);
-        print(data['userDetails']);
 
         return ConversationAndUserDetailsDTO(
           conversationResponseDTO: ConversationResponseDTO.fromJson(
@@ -45,7 +43,6 @@ class ConversationAPIService {
         );
       }
     } catch (e) {
-      print(e);
       return null;
     }
     return null;
@@ -69,9 +66,7 @@ class ConversationAPIService {
       );
 
       if (response.statusCode==200){
-        print(response.body);
         Map<String, dynamic> data= jsonDecode(response.body);
-        print(data);
 
         return ConversationAndUserDetailsDTO(
             conversationResponseDTO: ConversationResponseDTO.fromJson(data['conversationResponseDTO']),
@@ -80,7 +75,6 @@ class ConversationAPIService {
       }
       throw Exception("Error creating");
     }catch(e){
-      print(e);
       throw Exception("Error creating group");
     }
   }
@@ -94,12 +88,8 @@ class ConversationAPIService {
     bool firstFetch,
   ) async {
 
-    print(messageId);
-    print(timeStamp);
-    print(limit);
-    print(firstFetch);
     try {
-      final url = Uri.parse(conversationUrl + "/${conversationId}/messages");
+      final url = Uri.parse("$conversationUrl/${conversationId}/messages");
 
       final response = await http.post(
         url,
@@ -116,7 +106,6 @@ class ConversationAPIService {
       );
 
       if (response.statusCode == 200) {
-        print(response.body);
         final List<dynamic> data = jsonDecode(response.body);
         final List<MessageDetailsDTO> messageDetailsList = [];
         print(data);
@@ -161,8 +150,6 @@ class ConversationAPIService {
 
       if (response.statusCode==200){
         final List<dynamic> data= jsonDecode(response.body);
-        print("Inside convoservice");
-        print(data);
 
         List<MessageDetailsDTO> messageDetailsList= data.map(
             (m) => MessageDetailsDTO(
@@ -174,7 +161,6 @@ class ConversationAPIService {
       }
       return [];
     }catch(e){
-      print(e);
       return [];
     }
   }
@@ -193,7 +179,6 @@ class ConversationAPIService {
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         final List<ConversationAndUserDetailsDTO> conversationDetails = [];
-
         print(data);
 
         data.forEach((conversationDetail) {
@@ -216,7 +201,6 @@ class ConversationAPIService {
 
         return conversationDetails;
       }
-
       return [];
     } catch (e) {
       return [];

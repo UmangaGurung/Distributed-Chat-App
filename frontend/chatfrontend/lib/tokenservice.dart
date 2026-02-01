@@ -42,7 +42,7 @@ class TokenService extends AsyncNotifier<String?> {
     await clearToken();
     await _storage.write(key: 'auth_token', value: token);
     state= AsyncData(token);
-    print("token assigned: ${token}");
+    print("Token assigned");
   }
 
   Map<String, dynamic> tokenDecode() {
@@ -50,7 +50,6 @@ class TokenService extends AsyncNotifier<String?> {
       final token= state.value;
       if (token!=null){
         Map<String, dynamic> claims = JwtDecoder.decode(token);
-        print(claims);
         return claims;
       }
       return {};

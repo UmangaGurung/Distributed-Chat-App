@@ -229,7 +229,7 @@ class _RegisterContinueState extends State<RegisterContinue> {
                             );
                             return;
                           }
-                          if (response.status=="ACCOUNT_CREATED") {
+                          if (response.status=="ACCOUNT_CREATED_APP") {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text("Successful. ${response.response}")),
                             );

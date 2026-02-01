@@ -42,12 +42,6 @@ class UserAPIService {
 
       final auth = await account.authentication;
 
-      print('Email: ${account.email}');
-      print('ID Token: ${auth.idToken}');
-      print('photo: ${account.photoUrl}');
-      print('name: ${account.displayName}');
-      print('id: ${account.id}');
-
       final url = Uri.parse(userurl + "/google/auth/token");
 
       final response = await http.post(
@@ -67,14 +61,9 @@ class UserAPIService {
         print(data['status']);
 
         if (data['token'] != null &&
-            data['token'] != "" &&
-            data['status'] == "GOOGLE_LOGIN") {
-          // final tokenService = Provider.of<TokenService>(
-          //   context,
-          //   listen: false,
-          // );
+            data['token'] != "") {
+
           await authService.assignToken(token: data['token']);
-          //await tokenService.assignToken(token: data['token']);
 
           Map<String, dynamic> claims = authService.tokenDecode();
           if (claims['phone'] == null) {
@@ -83,12 +72,13 @@ class UserAPIService {
               data['status'],
               LoginResult.INCOMPLETE_PROFILE,
             );
+          }else{
+            return GoogleRegisterResponse(
+              data['message'],
+              data['status'],
+              LoginResult.SUCCESS,
+            );
           }
-          return GoogleRegisterResponse(
-            data['message'],
-            data['status'],
-            LoginResult.SUCCESS,
-          );
         } else {
           return GoogleRegisterResponse(
             data['message'],
@@ -122,12 +112,13 @@ class UserAPIService {
     File? profileImage,
   ) async {
     if (profileImage == null) {
-      print("No profile image selected");
       return RegisterResponse("No profile image selected", "FAILED");
     }
 
+    print(profileImage);
+
     try {
-      final url = Uri.parse(userurl + "/signup");
+      final url = Uri.parse("$userurl/signup");
       final request = http.MultipartRequest('POST', url);
 
       request.fields['email'] = email;
@@ -136,6 +127,7 @@ class UserAPIService {
       request.fields['phone'] = phone;
 
       String? mimetype = lookupMimeType(profileImage.path);
+
       var picfile = await http.MultipartFile.fromPath(
         'profilepicture',
         profileImage.path,
@@ -166,8 +158,9 @@ class UserAPIService {
     String password,
     TokenService authService,
   ) async {
+    final url = Uri.parse("$userurl/login");
+
     try {
-      final url = Uri.parse(userurl + "/login");
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
@@ -195,21 +188,20 @@ class UserAPIService {
     String query,
   ) async {
     try {
-      final url = Uri.parse(userurl + "/phone?search_query=${query}");
+      final url = Uri.parse("$userurl/phone?search_query=${query}");
 
       final response = await http.get(
         url,
         headers: {'Authorization': 'Bearer $token'},
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode==200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
-        print(data);
         return UserSearchResult.fromJson(data['result']);
       }
+
       throw Exception('Failed to search users');
     } catch (e) {
-      print('Error: $e');
       throw Exception('Failed to search users');
     }
   }
@@ -249,7 +241,7 @@ class UserAPIService {
   }
 
   Future<List<ParticipantDetails>> getUserDetails(Set<String> userIdList, String token) async{
-    final url= Uri.parse(userurl+"/allusers");
+    final url= Uri.parse("$userurl/allusers");
     try{
       final response= await http.post(
           url,
@@ -264,7 +256,7 @@ class UserAPIService {
 
       if (response.statusCode==200) {
         List<dynamic> responseBody = jsonDecode(response.body);
-        print(responseBody);
+
         List<ParticipantDetails> participantDetailsList = [];
 
         for (var user in responseBody) {
@@ -283,7 +275,7 @@ class UserAPIService {
 
   Future<bool> logout(String token) async{
     try{
-      final url= Uri.parse(userurl+"/logout");
+      final url= Uri.parse("$userurl/logout");
       final response = await http.post(
         url,
         headers: {'Authorization': 'Bearer $token'},
