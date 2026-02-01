@@ -76,9 +76,12 @@ public class UserDAOImpl implements UserDAO{
 			
 			UserDTO userDTO= modifiedUserDetails(user);
 			
+			RegisterStatus statusType = logintype.equals("APPLOGIN") 
+						? RegisterStatus.ACCOUNT_CREATED_APP : RegisterStatus.ACCOUNT_CREATED_GOOGLE; 
+			
 			return new RegisterResponseDTO(
 					userDTO,
-					RegisterStatus.ACCOUNT_CREATED,
+					statusType,
 					"Account Created");	
 		}
 		return new RegisterResponseDTO(null, RegisterStatus.FAILED, "FAILED");	

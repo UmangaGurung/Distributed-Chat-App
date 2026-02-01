@@ -3,9 +3,6 @@ package com.distributedchat.userservice.model.entity;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
@@ -47,11 +44,10 @@ public class User {
 	@Column(name= "imagepath")
 	private String profileimagepath;
 		
-	@CreatedDate
 	@Column(nullable = false, updatable = false)
 	private LocalDateTime createdat;
 	
-	@LastModifiedDate
+
 	private LocalDateTime updatedat;
 	
 	public User() {

@@ -24,10 +24,10 @@ public class GlobalExceptionHandler {
                              .body("Email already exists");
     }
 	
-	@ExceptionHandler(jakarta.persistence.NoResultException.class)
+	@ExceptionHandler({jakarta.persistence.NoResultException.class, org.springframework.dao.EmptyResultDataAccessException.class})
 	public ResponseEntity<String> handleResult(NoResultException ex){
 		return ResponseEntity.status(HttpStatus.NOT_FOUND)
-				.body("Invalid Credentials");
+				.body("Invalid Parameters");
 	}
 
     @ExceptionHandler(Exception.class)

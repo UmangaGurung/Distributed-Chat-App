@@ -70,9 +70,13 @@ public class UserServiceImpl implements UserService{
 			
 			String hashpassword= passwordEncoder.encode(password);
 			
+			System.out.println(file);
+			
 			String filename= file.getOriginalFilename().replaceAll("\\\\", "/");
 			Path uploadDir= Paths.get("/var/mnt/data/SpringToolSuite/projects/distributedchat/photos");
 			
+			System.out.println(filename);
+			System.out.println(uploadDir);
 			if (!Files.exists(uploadDir)) {
 				try {
 					Files.createDirectories(uploadDir);
@@ -82,6 +86,7 @@ public class UserServiceImpl implements UserService{
 			}
 			
 			Path filepath= uploadDir.resolve(filename);
+			System.out.println(filepath);
 			try {
 				Files.copy(file.getInputStream(), filepath, StandardCopyOption.REPLACE_EXISTING);
 			} catch (IOException e) {
