@@ -57,8 +57,7 @@ public class UserController {
 		Map<String, String> response= new HashMap<>();
 		response.put("message", data.getResponse());
 		response.put("status", data.getStatus().toString());
-		
-		System.out.println(response);
+
 		return ResponseEntity.ok(response);
 	}
 	
@@ -77,16 +76,13 @@ public class UserController {
 	public ResponseEntity<Map<String, String>> googleLogin(
 			@RequestBody @Valid GoogleLoginDTO googledto){
 		
-		System.out.println(googledto);
-		
 		GoogleResponseDTO data= userservice.googleLogin(googledto);
 		
 		Map<String, String> respone= new HashMap<>();
 		respone.put("token", data.getToken());
 		respone.put("status", data.getResponsedto().getStatus().toString());
 		respone.put("message", data.getResponsedto().getResponse());
-		
-		System.out.println(respone);
+
 		return ResponseEntity.ok(respone);
 	}
 	
@@ -109,7 +105,6 @@ public class UserController {
 				.toString();
 		
 		String oldToken= authHeader.substring(7);
-		System.out.println("/addphone: "+ oldToken);
 		
 		String token= userservice.addPhoneNumber(uid, addPhone, oldToken);
 		
@@ -128,8 +123,7 @@ public class UserController {
 				.toString();
 		
 		UserDTO user= userservice.findUserByPhone(uid, query);
-		System.out.println("found search result:"+ user.getPhoneNumber());
-		System.out.println("found search result:"+ user.getFullname());
+
 		Map<String, Object> response= new HashMap<>();
 		response.put("result", user);
 		
@@ -140,7 +134,6 @@ public class UserController {
 	public ResponseEntity<?> logoutUser(
 			@RequestHeader("Authorization") String authHeader){
 		String token= authHeader.substring(7);
-		System.out.println("----Logout:---- "+ token);
 		
 		userservice.logoutUser(token);
 		
