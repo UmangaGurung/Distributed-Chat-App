@@ -1,5 +1,7 @@
 # Distributed Chat App
 
+![Architecture Diagram](./diagram-export-2-2-2026-11_15_07-PM.png)
+
 ## Features:
 - Real-time message delivery
 - One-on-one and Group chats
