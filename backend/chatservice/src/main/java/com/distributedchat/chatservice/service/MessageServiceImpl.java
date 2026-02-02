@@ -49,7 +49,7 @@ public class MessageServiceImpl implements MessageService{
 	}
 	
 	@Override
-	public void saveMessage(MessageDTO messageDTO, String userId) {
+	public void saveMessage(MessageDTO messageDTO, String userId, String token) {
 		// TODO Auto-generated method stub
 		try {
 			UUID uid= UUID.fromString(userId);
@@ -64,7 +64,7 @@ public class MessageServiceImpl implements MessageService{
 			MessageRedisPayloadDTO payloadDTO= messageDAO.saveMessage(messageDTO, uid);
 			
 			messagePublisher.onMessageSuccess(payloadDTO, userId);
-			messagePublisher.publishMessage(payloadDTO);
+			messagePublisher.publishMessage(payloadDTO, token);
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw e;  // Re-throw so behavior doesn't change

@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -17,6 +18,7 @@ public class RedisTokenSubscriber implements MessageListener{
 	
 	private final ObjectMapper objectMapper = new ObjectMapper();
 	private RedisTokenBlackList blackList;
+	private SimpMessageHeaderAccessor accessor;
 	
 	public RedisTokenSubscriber(RedisTokenBlackList blackList) {
 		// TODO Auto-generated constructor stub
@@ -34,6 +36,7 @@ public class RedisTokenSubscriber implements MessageListener{
 			});
 					
 			System.out.println("Message Service recieved Expired Token: "+ body);
+			System.out.println(tokenMap);
 			
 			tokenMap.forEach((tokenId, expire) -> {
 				System.out.println(tokenId);
@@ -41,6 +44,7 @@ public class RedisTokenSubscriber implements MessageListener{
 				if (blackList.isTokenBlackListed(tokenId)) {
 					return;
 				}
+				accessor.setSessionAttributes(null);
 				blackList.blackListToken(tokenId, expire);
 			});
 		}catch(Exception e) {

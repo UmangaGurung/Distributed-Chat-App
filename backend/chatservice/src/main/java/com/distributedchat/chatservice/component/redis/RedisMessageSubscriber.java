@@ -2,6 +2,7 @@ package com.distributedchat.chatservice.component.redis;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.data.redis.connection.Message;
@@ -14,6 +15,7 @@ import com.distributedchat.chatservice.model.dto.UserDetailGrpcDTO;
 import com.distributedchat.chatservice.model.dto.Conversation.ConvoMessageDTO;
 import com.distributedchat.chatservice.model.dto.Message.MessageRedisPayloadDTO;
 import com.distributedchat.chatservice.model.dto.Message.MessageResponseDTO;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Component
@@ -48,7 +50,11 @@ public class RedisMessageSubscriber implements MessageListener{
 		System.out.println(patternStr);
 		
 		try {
-			MessageRedisPayloadDTO payloadDTO= objectMapper.readValue(message.getBody(), MessageRedisPayloadDTO.class);
+			Map<String, Object> broadcastedPayload= 
+					objectMapper.readValue(message.getBody(), new TypeReference<Map<String, Object>>() {});
+			
+			MessageRedisPayloadDTO payloadDTO= objectMapper.convertValue(broadcastedPayload.get("payloadDTO"), MessageRedisPayloadDTO.class);
+			String token= broadcastedPayload.get("token").toString();
 			
 			String encryptedMessage= payloadDTO.getMessage().getMessage();
 			System.out.println("Encrypted Message:=="+encryptedMessage);
@@ -56,7 +62,7 @@ public class RedisMessageSubscriber implements MessageListener{
 			String decryptedMessage= messageEncryption.decryptMessage(encryptedMessage);
 			System.out.println(decryptedMessage);
 			
-			UserDetailGrpcDTO userDetails= redisCaching.cacheUserInfo(payloadDTO.getMessage().getSenderId());
+			UserDetailGrpcDTO userDetails= redisCaching.cacheUserInfo(payloadDTO.getMessage().getSenderId(), token);
 			
 			MessageResponseDTO responseDTO= new MessageResponseDTO();
 			responseDTO.setConversationId(payloadDTO.getMessage().getConversation().getConversationId());

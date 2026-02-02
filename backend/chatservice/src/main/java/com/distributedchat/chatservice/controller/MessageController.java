@@ -28,8 +28,9 @@ public class MessageController {
 		System.out.println(sessionAttributes.get("userId"));
 		
 		String userId= String.valueOf(sessionAttributes.get("userId"));
+		String token= String.valueOf(sessionAttributes.get("token"));
 		
-		messageService.saveMessage(message, userId);	
+		messageService.saveMessage(message, userId, token);	
 	}
 	
 	@MessageMapping("/chat.typingEvent")
