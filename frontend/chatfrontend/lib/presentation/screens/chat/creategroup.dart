@@ -114,7 +114,7 @@ class _CreateGroupState extends ConsumerState<CreateGroup> {
       );
 
       ParticipantDetails participantDetails = ParticipantDetails(
-        userId: response!.userId,
+        userId: response.userId,
         userName: response.fullname,
         photoUrl: response.imageURL,
         phoneNumber: response.phoneNumber,

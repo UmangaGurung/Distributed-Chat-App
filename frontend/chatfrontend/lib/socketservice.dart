@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:chatfrontend/consthost.dart';
 import 'package:chatfrontend/dto/conversation/conversation&userdetailsdto.dart';
 import 'package:chatfrontend/dto/conversation/conversationresponsedto.dart';
 import 'package:chatfrontend/dto/message/messagedetailsdto.dart';
@@ -11,7 +12,7 @@ import 'package:stomp_dart_client/stomp_dart_client.dart';
 
 class SocketService {
   late StompClient stompClient;
-  final String url = "ws://192.168.1.74:8080/ws/";
+  final String url = "ws://${HostConfig.host}:8080/ws/";
   late String userId;
 
   bool isConnected = false;

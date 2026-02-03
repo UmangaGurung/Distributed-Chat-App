@@ -1,5 +1,6 @@
 import 'package:chatfrontend/cache/service/hivemessageservice.dart';
 import 'package:chatfrontend/cache/service/hiveuserservice.dart';
+import 'package:chatfrontend/consthost.dart';
 import 'package:chatfrontend/presentation/providers/socketprovider.dart';
 import 'package:chatfrontend/presentation/providers/tokenprovider.dart';
 import 'package:chatfrontend/tokenservice.dart';
@@ -49,7 +50,7 @@ class _UserProfileState extends ConsumerState<UserProfile> {
     if (image.startsWith("https")) {
       return image;
     }
-    String img = "http://192.168.1.74:8081/photos/${image.split("/").last}";
+    String img = "http://${HostConfig.host}:8081/photos/${image.split("/").last}";
 
     return img;
   }

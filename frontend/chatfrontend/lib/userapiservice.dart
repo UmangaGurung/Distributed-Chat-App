@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:chatfrontend/consthost.dart';
 import 'package:chatfrontend/dto/conversation/participantdetails.dart';
 import 'package:chatfrontend/dto/usersearchresult.dart';
 import 'package:chatfrontend/loginresult.dart';
@@ -14,7 +15,7 @@ import 'package:path/path.dart';
 import 'package:chatfrontend/googleregisterresponse.dart';
 
 class UserAPIService {
-  static const String userurl = "http://192.168.1.74:8081/api/users";
+  static const String userurl = "http://${HostConfig.host}:8081/api/users";
 
   final GoogleSignIn googleSignIn = GoogleSignIn.instance;
   final String? googleClientId= dotenv.env['CLIENT_ID'];
@@ -188,7 +189,7 @@ class UserAPIService {
     String query,
   ) async {
     try {
-      final url = Uri.parse("$userurl/phone?search_query=${query}");
+      final url = Uri.parse("$userurl/phone?search_query=$query");
 
       final response = await http.get(
         url,
@@ -213,7 +214,7 @@ class UserAPIService {
     TokenService authService,
   ) async {
     try {
-      final url = Uri.parse(userurl + "/addphone");
+      final url = Uri.parse("$userurl/addphone");
 
       final response = await http.patch(
         url,

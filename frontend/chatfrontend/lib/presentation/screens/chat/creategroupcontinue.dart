@@ -1,3 +1,4 @@
+import 'package:chatfrontend/consthost.dart';
 import 'package:chatfrontend/conversationservice.dart';
 import 'package:chatfrontend/dto/conversation/participantdetails.dart';
 import 'package:chatfrontend/presentation/providers/tokenprovider.dart';
@@ -42,7 +43,7 @@ class _CreateGroupContinueState extends ConsumerState<CreateGroupContinue> {
     if (image.startsWith("https")) {
       return image;
     }
-    String img = "http://192.168.1.74:8081/photos/${image.split("/").last}";
+    String img = "http://${HostConfig.host}:8081/photos/${image.split("/").last}";
 
     return img;
   }

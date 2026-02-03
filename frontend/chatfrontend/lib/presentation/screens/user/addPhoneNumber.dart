@@ -1,3 +1,4 @@
+import 'package:chatfrontend/consthost.dart';
 import 'package:chatfrontend/presentation/providers/tokenprovider.dart';
 import 'package:chatfrontend/presentation/screens/chatscreen.dart';
 import 'package:chatfrontend/tokenservice.dart';
@@ -34,21 +35,21 @@ class _AddPhoneNumberState extends ConsumerState<AddPhoneNumber> {
     token = authService.token;
     claims = authService.tokenDecode();
 
-    final loginType = claims!['loginType'];
-    final rawPath = claims!['imagepath'] ?? "";
+    final loginType = claims['loginType'];
+    final rawPath = claims['imagepath'] ?? "";
 
     final fileName = rawPath.split('/').isNotEmpty
         ? rawPath.split('/').last
         : "";
 
     final url = loginType == "APPLOGIN"
-        ? "http://192.168.1.68/photos/$fileName"
+        ? "http://${HostConfig.host}:8081/photos/$fileName"
         : rawPath;
 
     setState(() {
       imageUrl = url;
-      fullNameController.text = claims!['fullname'] ?? '';
-      emailController.text = claims!['email'] ?? '';
+      fullNameController.text = claims['fullname'] ?? '';
+      emailController.text = claims['email'] ?? '';
     });
   }
 

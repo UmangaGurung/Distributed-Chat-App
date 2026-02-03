@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:chatfrontend/consthost.dart';
 import 'package:chatfrontend/dto/conversation/conversation&userdetailsdto.dart';
 import 'package:chatfrontend/dto/message/messagedetailsdto.dart';
 import 'package:chatfrontend/dto/message/messageresponsedto.dart';
@@ -12,7 +13,7 @@ import 'enums/UpdateType.dart';
 
 class ConversationAPIService {
   static const String conversationUrl =
-      "http://192.168.1.74:8082/chat/conversations";
+      "http://${HostConfig.host}:8082/chat/conversations";
 
   Future<ConversationAndUserDetailsDTO?> createOrFindConversation(
     String? token,
@@ -89,7 +90,7 @@ class ConversationAPIService {
   ) async {
 
     try {
-      final url = Uri.parse("$conversationUrl/${conversationId}/messages");
+      final url = Uri.parse("$conversationUrl/$conversationId/messages");
 
       final response = await http.post(
         url,
@@ -233,7 +234,7 @@ class ConversationAPIService {
 
       }
     }catch(e){
-      
+      print(e);
     }
   }
 }
