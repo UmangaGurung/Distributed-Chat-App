@@ -75,7 +75,7 @@
    flutter pub get
    ```
 
-   **Note:** *If there are no .g files arent being recognized by your IDE/editor.*
+   **Note:** *If the .g files aren't being recognized by your IDE/editor.*
    Run:
    ```bash
    flutter pub run build_runner build
