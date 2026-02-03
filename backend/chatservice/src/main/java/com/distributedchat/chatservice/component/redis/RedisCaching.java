@@ -37,7 +37,7 @@ public class RedisCaching {
 		this.hashOperations= redisTemplate.opsForHash();
 	}
 	
-	public List<UserDetailGrpcDTO> cacheListOfUserInfo(List<UUID> usersId){
+	public List<UserDetailGrpcDTO> cacheListOfUserInfo(List<UUID> usersId, String token){
 		List<String> stringUsersId= usersId.stream()
 				.map(userId -> userId.toString())
 				.collect(Collectors.toList());
@@ -51,9 +51,9 @@ public class RedisCaching {
 			
 			if (missingInfoIds.size()==1) {
 				UUID userId= UUID.fromString(missingInfoIds.get(0));
-				missingInfos.add(client.getUserInfo(userId));
+				missingInfos.add(client.getUserInfo(userId, token));
 			}else {
-				missingInfos.addAll(client.getUserInfoList(missingInfoIds));
+				missingInfos.addAll(client.getUserInfoList(missingInfoIds, token));
 			}
 			
 			for (UserDetailGrpcDTO userInfo: missingInfos) {
@@ -75,7 +75,7 @@ public class RedisCaching {
 		return results.getUserDetailsList();
 	}
 	
-	public UserDetailGrpcDTO cacheUserInfo(UUID userId) {
+	public UserDetailGrpcDTO cacheUserInfo(UUID userId, String token) {
 		UserDetailGrpcDTO result= getCacheUserInfo(userId.toString());
 		
 		if (result!=null) {
@@ -83,7 +83,7 @@ public class RedisCaching {
 		}
 		
 		log.info("Delegating call to UserService for details of sender: "+userId);
-		UserDetailGrpcDTO userInfo= client.getUserInfo(userId);
+		UserDetailGrpcDTO userInfo= client.getUserInfo(userId, token);
 		
 		if (userInfo==null) {
 			throw new IllegalArgumentException();

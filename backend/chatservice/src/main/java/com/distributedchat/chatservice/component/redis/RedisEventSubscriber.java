@@ -24,7 +24,7 @@ public class RedisEventSubscriber implements MessageListener{
 		try {
 			String channelEvent= new String(message.getBody(), StandardCharsets.UTF_8);
 			
-			System.out.println("On Severs:"+channelEvent);
+			System.out.println("On Server:"+channelEvent);
 			String[] list= channelEvent.split(seperator, 4);
 			System.out.println(list[0]);
 			

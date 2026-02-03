@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Repository;
 
-import com.distributedchat.chatservice.component.UserGrpcClient;
 import com.distributedchat.chatservice.model.dto.Conversation.ConversationResponseDTO;
 import com.distributedchat.chatservice.model.dto.Message.LatestMessageDTO;
 import com.distributedchat.chatservice.model.dto.Message.MessagePaginationDTO;
@@ -27,7 +26,7 @@ public class ConversationDAOImpl implements ConversationDAO{
 	
 	private EntityManager entityManager;
 	
-	public ConversationDAOImpl(EntityManager entityManager, UserGrpcClient grpcClient) {
+	public ConversationDAOImpl(EntityManager entityManager) {
 		// TODO Auto-generated constructor stub
 		this.entityManager= entityManager;
 	}

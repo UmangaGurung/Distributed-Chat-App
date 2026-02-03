@@ -1,5 +1,8 @@
 package com.distributedchat.chatservice.component.redis;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
@@ -25,10 +28,13 @@ public class RedisMessagePublisher {
 		this.messageEncryption= messageEncryption;
 	}
 	
-	public void publishMessage(MessageRedisPayloadDTO payloadDTO) {	
+	public void publishMessage(MessageRedisPayloadDTO payloadDTO, String token) {	
 		System.out.println("Messagepayload to publish=======");
+		Map<String, Object> payload= new HashMap<>();
+		payload.put("payloadDTO", payloadDTO);
+		payload.put("token", token);
 		
-		redisTemplate.convertAndSend("chat:messages", payloadDTO);
+		redisTemplate.convertAndSend("chat:messages", payload);
 	}
 	
 	public void onMessageSuccess(MessageRedisPayloadDTO payloadDTO, String userId) {

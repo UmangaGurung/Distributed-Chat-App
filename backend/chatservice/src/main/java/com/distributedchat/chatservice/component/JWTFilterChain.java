@@ -63,7 +63,8 @@ public class JWTFilterChain extends OncePerRequestFilter{
 					"userId", claims.getSubject().toString(),
 					"userName", claims.get("fullname").toString(),
 					"phone", phone,
-					"photo", claims.get("imagepath").toString()
+					"photo", claims.get("imagepath").toString(),
+					"token", token
 					);
 			
 			UsernamePasswordAuthenticationToken authToken= new UsernamePasswordAuthenticationToken(details, null, List.of());

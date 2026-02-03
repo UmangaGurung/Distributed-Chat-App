@@ -54,14 +54,17 @@ public class ConversationController {
 	@PostMapping("/conversations/direct-messages")
 	public ResponseEntity<ConversationDetailsListDTO> createOrFindConversation(
 			@RequestBody CreateOrFindDTO createOrFindDTO,
-			@AuthenticationPrincipal Map<String, String> userDetail){
-		String userId= userDetail.get("userId");
-		String userName= userDetail.get("userName");
-		String phone= userDetail.get("phone");
-		String photo= userDetail.get("photo");
+			@AuthenticationPrincipal Map<String, String> userDetails){
+		String userId= userDetails.get("userId");
+		String userName= userDetails.get("userName");
+		String phone= userDetails.get("phone");
+		String photo= userDetails.get("photo");
+		
+
+		String token= userDetails.get("token");
 		
 		ConversationDetailsListDTO response= conversationService.createOrFindConversation(
-				createOrFindDTO, userId, userName, phone, photo);
+				createOrFindDTO, userId, userName, phone, photo, token);
 		
 		return ResponseEntity.status(HttpStatus.OK).body(response);
 	}
@@ -70,8 +73,10 @@ public class ConversationController {
 	public ResponseEntity<List<ConversationDetailsListDTO>> getConversations(
 			@AuthenticationPrincipal Map<String, String> userDetails){
 		String uid= userDetails.get("userId");
+
+		String token= userDetails.get("token");
 		
-		List<ConversationDetailsListDTO> allConversations= conversationService.getConversation(uid);
+		List<ConversationDetailsListDTO> allConversations= conversationService.getConversation(uid, token);
 		
 		return ResponseEntity.status(HttpStatus.OK).body(allConversations);
 	}
@@ -102,7 +107,8 @@ public class ConversationController {
 			@AuthenticationPrincipal Map<String, String> userDetails){
 		String userId= userDetails.get("userId");
 				
-		List<ConvoMessageDTO> allMessages= conversationService.getAllConversationMessages(convoId, userId, messagePaginationDTO);
+		String token= userDetails.get("token");
+		List<ConvoMessageDTO> allMessages= conversationService.getAllConversationMessages(convoId, userId, messagePaginationDTO, token);
 		
 		return ResponseEntity.status(HttpStatus.OK).body(allMessages);
 	}
@@ -113,8 +119,10 @@ public class ConversationController {
 			@RequestBody LatestMessageDTO latestMessageDTO,
 			@AuthenticationPrincipal Map<String, String> userDetails){
 		String userId= userDetails.get("userId");
+
+		String token= userDetails.get("token");
 		
-		List<ConvoMessageDTO> latestMessages= conversationService.getLatestMessages(conversationId, userId, latestMessageDTO);
+		List<ConvoMessageDTO> latestMessages= conversationService.getLatestMessages(conversationId, userId, latestMessageDTO, token);
 		
 		return ResponseEntity.status(HttpStatus.OK).body(latestMessages);
 	}

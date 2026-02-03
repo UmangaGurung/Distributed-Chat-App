@@ -14,15 +14,15 @@ import com.distributedchat.chatservice.model.dto.Message.MessagePaginationDTO;
 public interface ConversationService {
 	public ConversationDetailsListDTO createGroupConversation(ConversationGroupDTO conversationGroupDTO, String uid, String userName, String phone, String photo);
 	
-	public ConversationDetailsListDTO createOrFindConversation(CreateOrFindDTO createOrFindDTO, String uid, String userName, String phone, String photo);
+	public ConversationDetailsListDTO createOrFindConversation(CreateOrFindDTO createOrFindDTO, String uid, String userName, String phone, String photo, String token);
 
-	public List<ConversationDetailsListDTO> getConversation(String uid);
+	public List<ConversationDetailsListDTO> getConversation(String uid, String token);
 
 	public ConversationResponseDTO editConversationDetails(ConversationUpdateDTO conversationUpdateDTO, String convoId, String userId);
 	
 	public ConversationResponseDTO addParticipants(ConversationUpdateDTO conversationUpdateDTO, String convoId, String userId);
 	
-	public List<ConvoMessageDTO> getAllConversationMessages(String convoId, String userId, MessagePaginationDTO messagePaginationDTO);
+	public List<ConvoMessageDTO> getAllConversationMessages(String convoId, String userId, MessagePaginationDTO messagePaginationDTO, String token);
 
-	public List<ConvoMessageDTO> getLatestMessages(String convoId, String userId, LatestMessageDTO latestMessageDTO);
+	public List<ConvoMessageDTO> getLatestMessages(String convoId, String userId, LatestMessageDTO latestMessageDTO, String token);
 }

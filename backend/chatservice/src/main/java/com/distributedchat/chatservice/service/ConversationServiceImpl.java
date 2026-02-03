@@ -79,7 +79,7 @@ public class ConversationServiceImpl implements ConversationService {
 	
 	@Override
 	public ConversationDetailsListDTO createOrFindConversation(
-			CreateOrFindDTO createOrFindDTO, String uid, String userName, String phone, String photo) {
+			CreateOrFindDTO createOrFindDTO, String uid, String userName, String phone, String photo, String token) {
 		// TODO Auto-generated method stub
 		UUID userId= UUID.fromString(uid);
 		UUID participantId= createOrFindDTO.getParticipantId();
@@ -91,7 +91,7 @@ public class ConversationServiceImpl implements ConversationService {
 		
 		Map<ConversationResponseDTO, Boolean> result= conversationDAO.createOrFindConversation(userId, participantId, type);
 
-		UserDetailGrpcDTO userDetails= redisCaching.cacheUserInfo(participantId);
+		UserDetailGrpcDTO userDetails= redisCaching.cacheUserInfo(participantId, token);
 		
 		ConversationResponseDTO responseDTO= result.keySet().stream().findFirst().get();
 		boolean operationType= result.get(responseDTO);
@@ -113,7 +113,7 @@ public class ConversationServiceImpl implements ConversationService {
 	}
 
 	@Override
-	public List<ConversationDetailsListDTO> getConversation(String uid) {
+	public List<ConversationDetailsListDTO> getConversation(String uid, String token) {
 		// TODO Auto-generated method stub
 		UUID userId= UUID.fromString(uid);
 		
@@ -132,7 +132,7 @@ public class ConversationServiceImpl implements ConversationService {
 			}
 		}
 		
-		List<UserDetailGrpcDTO> userDetails= redisCaching.cacheListOfUserInfo(userIds);
+		List<UserDetailGrpcDTO> userDetails= redisCaching.cacheListOfUserInfo(userIds, token);
 		Map<UUID, UserDetailGrpcDTO> mappedUserDetails= new HashMap<>();
 		
 		for (UserDetailGrpcDTO userDto: userDetails) {
@@ -211,7 +211,7 @@ public class ConversationServiceImpl implements ConversationService {
 	
 	@Override
 	public List<ConvoMessageDTO> getAllConversationMessages(
-			String convoIdString, String userIdString, MessagePaginationDTO messagePaginationDTO) {
+			String convoIdString, String userIdString, MessagePaginationDTO messagePaginationDTO, String token) {
 		// TODO Auto-generated method stub
 		UUID convoId= UUID.fromString(convoIdString);
 		UUID userId= UUID.fromString(userIdString);
@@ -223,7 +223,7 @@ public class ConversationServiceImpl implements ConversationService {
 				.distinct()
 				.collect(Collectors.toList());
 		
-		List<UserDetailGrpcDTO> userDetailsList= redisCaching.cacheListOfUserInfo(senderIdList);
+		List<UserDetailGrpcDTO> userDetailsList= redisCaching.cacheListOfUserInfo(senderIdList, token);
 		Map<UUID, UserDetailGrpcDTO> userDetailMap= new HashMap<>();
 		
 		for (UserDetailGrpcDTO grpcDTO: userDetailsList) {
@@ -248,7 +248,7 @@ public class ConversationServiceImpl implements ConversationService {
 	}
 
 	@Override
-	public List<ConvoMessageDTO> getLatestMessages(String convoId, String userId, LatestMessageDTO latestMessageDTO) {
+	public List<ConvoMessageDTO> getLatestMessages(String convoId, String userId, LatestMessageDTO latestMessageDTO, String token) {
 		// TODO Auto-generated method stub
 		UUID conversationId= UUID.fromString(convoId);
 		UUID uId= UUID.fromString(userId);
@@ -261,7 +261,7 @@ public class ConversationServiceImpl implements ConversationService {
 				.distinct()
 				.collect(Collectors.toList());
 		
-		List<UserDetailGrpcDTO> userDetails= redisCaching.cacheListOfUserInfo(userIdList);
+		List<UserDetailGrpcDTO> userDetails= redisCaching.cacheListOfUserInfo(userIdList, token);
 		Map<UUID, UserDetailGrpcDTO> userDetailMap= new HashMap<>();
 		
 		for (UserDetailGrpcDTO userDetail: userDetails) {

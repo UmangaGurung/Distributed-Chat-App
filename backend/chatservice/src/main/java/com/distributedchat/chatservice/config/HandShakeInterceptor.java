@@ -58,9 +58,9 @@ public class HandShakeInterceptor implements HandshakeInterceptor {
             attributes.put("exp", jwtExp.getTime());
             attributes.put("tokenId", tokenId);
             attributes.put("imagePath", imagePath);
+            attributes.put("token", token);
         } else {
             System.out.println("No token received");
-            attributes.put("userId", null);
             return false;
         }
         return true;
@@ -77,7 +77,7 @@ public class HandShakeInterceptor implements HandshakeInterceptor {
 		if (request instanceof ServletServerHttpRequest servletRequest) {
 			ip= servletRequest.getServletRequest().getRemoteAddr();
 		}
-		
+	
 		System.out.println("Address: " + ip);
 	}
 	

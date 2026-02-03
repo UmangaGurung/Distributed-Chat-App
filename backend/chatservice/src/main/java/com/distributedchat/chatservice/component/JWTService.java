@@ -39,6 +39,9 @@ public class JWTService {
 	}
 	
 	public boolean ValidateToken(String token) {
+		if (token==null) {
+			return false;
+		}
 		try{
 			Claims claims= extractClaims(token);
 		
