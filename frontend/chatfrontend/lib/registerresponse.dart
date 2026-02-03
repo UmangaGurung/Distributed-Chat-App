@@ -1,6 +1,3 @@
-
-import 'package:chatfrontend/loginresult.dart';
-
 class RegisterResponse{
   String? _status;
   String? _response;

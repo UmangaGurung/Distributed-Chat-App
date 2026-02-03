@@ -1,3 +1,5 @@
+import 'package:chatfrontend/consthost.dart';
+
 class UserSearchResult{
   final String userId;
   final String email;
@@ -18,7 +20,7 @@ class UserSearchResult{
   factory UserSearchResult.fromJson(Map<String, dynamic> json) {
     String imageURL= json['imageURL'];
     if (!imageURL.startsWith("https")){
-      imageURL= "http://192.168.1.74:8081/photos/"+imageURL.split('/').last;
+      imageURL= "http://${HostConfig.host}:8081/photos/${imageURL.split('/').last}";
     }
 
     return UserSearchResult(

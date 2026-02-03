@@ -1,14 +1,14 @@
 import 'dart:async';
 
-import 'package:chatfrontend/cache/model/userdetailscache.dart';
+
 import 'package:chatfrontend/cache/service/hivemessageservice.dart';
 import 'package:chatfrontend/cache/service/hiveuserservice.dart';
 import 'package:chatfrontend/conversationservice.dart';
 import 'package:chatfrontend/dto/conversation/conversation&userdetailsdto.dart';
-import 'package:chatfrontend/dto/conversation/participantdetails.dart';
+
 import 'package:chatfrontend/dto/message/messagedetailsdto.dart';
 import 'package:chatfrontend/dto/message/messageresponsedto.dart';
-import 'package:chatfrontend/presentation/providers/chatmessagestate.dart';
+
 import 'package:chatfrontend/presentation/providers/tokenprovider.dart';
 import 'package:chatfrontend/presentation/screens/chat/chatbubble.dart';
 import 'package:chatfrontend/socketservice.dart';
@@ -23,7 +23,7 @@ import 'package:pixelarticons/pixelarticons.dart';
 import 'package:chatfrontend/constants.dart' as constColor;
 
 import 'chatmemberscreen.dart';
-import 'editchatscreen.dart';
+
 
 class ChatscreenTest extends ConsumerStatefulWidget {
   final ConversationAndUserDetailsDTO conversation;
@@ -162,10 +162,7 @@ class _ChatscreenState extends ConsumerState<ChatscreenTest> {
             onSelected: (value) {
               switch (value) {
                 case 'edit':
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => EditChatScreen()),
-                  );
+
                   break;
                 case 'members':
                   Navigator.push(
