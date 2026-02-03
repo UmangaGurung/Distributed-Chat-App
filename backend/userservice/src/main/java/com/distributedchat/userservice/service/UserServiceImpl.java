@@ -70,13 +70,9 @@ public class UserServiceImpl implements UserService{
 			
 			String hashpassword= passwordEncoder.encode(password);
 			
-			System.out.println(file);
-			
 			String filename= file.getOriginalFilename().replaceAll("\\\\", "/");
 			Path uploadDir= Paths.get("/var/mnt/data/SpringToolSuite/projects/distributedchat/photos");
-			
-			System.out.println(filename);
-			System.out.println(uploadDir);
+
 			if (!Files.exists(uploadDir)) {
 				try {
 					Files.createDirectories(uploadDir);
@@ -86,7 +82,6 @@ public class UserServiceImpl implements UserService{
 			}
 			
 			Path filepath= uploadDir.resolve(filename);
-			System.out.println(filepath);
 			try {
 				Files.copy(file.getInputStream(), filepath, StandardCopyOption.REPLACE_EXISTING);
 			} catch (IOException e) {
@@ -97,10 +92,7 @@ public class UserServiceImpl implements UserService{
 			
 			RegisterResponseDTO responseDTO= userdao.registerNewUser(
 					email, fullname, hashpassword, phone, imagepath, "APPLOGIN");
-			System.out.println(responseDTO.getUserDto());
-			System.out.println(responseDTO.getResponse());
-			System.out.println(responseDTO.getStatus());
-			
+
 			return responseDTO;
 	}
 
@@ -187,8 +179,6 @@ public class UserServiceImpl implements UserService{
 		
 		String token= jwtservice.generateToken(userDto);
 		blackList.blackListToken(oldToken);
-		
-		System.out.println("New Token: "+ token);
 		
 		return token;
 	}
