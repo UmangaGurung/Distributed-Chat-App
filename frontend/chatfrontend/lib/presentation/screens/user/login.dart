@@ -17,7 +17,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _formkey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
 
@@ -41,7 +41,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Form(
-            key: _formkey,
+            key: _formKey,
             child: Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -191,7 +191,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () async {
-                          if (!_formkey.currentState!.validate()) {
+                          if (!_formKey.currentState!.validate()) {
                             return;
                           }
                           bool success;

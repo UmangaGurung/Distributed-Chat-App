@@ -5,7 +5,6 @@ import 'package:chatfrontend/presentation/providers/conversationstate.dart';
 import 'package:chatfrontend/presentation/providers/tokenprovider.dart';
 import 'package:chatfrontend/presentation/providers/typingeventstate.dart';
 import 'package:chatfrontend/socketservice.dart';
-import 'package:chatfrontend/tokenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 

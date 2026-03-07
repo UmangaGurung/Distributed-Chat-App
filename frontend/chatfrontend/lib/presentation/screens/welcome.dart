@@ -25,71 +25,75 @@ class _WelcomeState extends State<Welcome> {
       backgroundColor: constants.blackcolor,
       body: SafeArea(
         child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: 280,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => LoginScreen()),
-                    );
-                  },
-                  style: ButtonStyle(
-                    backgroundColor: WidgetStatePropertyAll(
-                      constants.blackcolor,
-                    ),
-                    shape: WidgetStatePropertyAll(
-                      RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
-                        side: BorderSide(
-                          color: constants.magentacolor,
-                          width: 2,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 320),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                spacing: 20,
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => LoginScreen()),
+                        );
+                      },
+                      style: ButtonStyle(
+                        backgroundColor: const WidgetStatePropertyAll(
+                          constants.blackcolor,
                         ),
+                        shape: WidgetStatePropertyAll(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                            side: const BorderSide(
+                              color: constants.magentacolor,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                      ),
+                      child: const Text(
+                        "Login",
+                        style: TextStyle(color: constants.cyancolor),
                       ),
                     ),
                   ),
-                  child: Text(
-                    "Login",
-                    style: TextStyle(color: constants.cyancolor, fontSize: 13),
-                  ),
-                ),
-              ),
-              SizedBox(height: 18),
-              SizedBox(
-                width: 280,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => RegisterScreen()),
-                    );
-                  },
-                  style: ButtonStyle(
-                    backgroundColor: WidgetStatePropertyAll(
-                      constants.blackcolor,
-                    ),
-                    shape: WidgetStatePropertyAll(
-                      RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
-                        side: BorderSide(
-                          color: constants.magentacolor,
-                          width: 2,
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => RegisterScreen()),
+                        );
+                      },
+                      style: ButtonStyle(
+                        backgroundColor: const WidgetStatePropertyAll(
+                          constants.blackcolor,
                         ),
+                        shape: WidgetStatePropertyAll(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                            side: const BorderSide(
+                              color: constants.magentacolor,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                      ),
+                      child: const Text(
+                        "Register",
+                        style: TextStyle(color: constants.cyancolor),
                       ),
                     ),
                   ),
-                  child: Text(
-                    "Register",
-                    style: TextStyle(color: constants.cyancolor, fontSize: 13),
-                  ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

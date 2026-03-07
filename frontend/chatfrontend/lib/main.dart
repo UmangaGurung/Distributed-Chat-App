@@ -8,13 +8,13 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:chatfrontend/constants.dart' as constColor;
+import 'package:chatfrontend/constants.dart' as const_color;
 import 'package:hive_flutter/hive_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  //debugPaintSizeEnabled= true;
   await dotenv.load(fileName: "assets/.env");
-  //debugPaintSizeEnabled=true;
   await Hive.initFlutter();
   Hive.registerAdapter(HiveMessageModelAdapter());
   Hive.registerAdapter(HiveUserModelAdapter());
@@ -22,7 +22,6 @@ void main() async {
   await Hive.openBox('conversationIndex');
   await Hive.openBox<HiveUserModel>('user');
   await Hive.openBox<DateTime>('dataTTL');
-  //await inspectHive();
   runApp(ProviderScope(child: ChatApp()));
 }
 
@@ -53,8 +52,8 @@ class ChatApp extends ConsumerWidget {
         },
         loading: () {
           return const Scaffold(
-            backgroundColor: constColor.blackcolor,
-            body: Center(child: CircularProgressIndicator(color: constColor.magentacolor,)),
+            backgroundColor: const_color.blackcolor,
+            body: Center(child: CircularProgressIndicator(color: const_color.magentacolor,)),
           );
         },
       ),

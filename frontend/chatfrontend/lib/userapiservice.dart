@@ -15,7 +15,7 @@ import 'package:path/path.dart';
 import 'package:chatfrontend/googleregisterresponse.dart';
 
 class UserAPIService {
-  static const String userurl = "http://${HostConfig.host}:8081/api/users";
+  static const String userUrl = "http://${HostConfig.host}:8081/api/users";
 
   final GoogleSignIn googleSignIn = GoogleSignIn.instance;
   final String? googleClientId= dotenv.env['CLIENT_ID'];
@@ -32,18 +32,9 @@ class UserAPIService {
         scopeHint: ['email', 'profile', 'openid'],
       );
 
-      if (account == null) {
-        print('User cancelled sign-in');
-        return GoogleRegisterResponse(
-          "User cancelled sign-in",
-          "FAILED",
-          LoginResult.FAILED,
-        );
-      }
-
       final auth = await account.authentication;
 
-      final url = Uri.parse(userurl + "/google/auth/token");
+      final url = Uri.parse("$userUrl/google/auth/token");
 
       final response = await http.post(
         url,
@@ -119,7 +110,7 @@ class UserAPIService {
     print(profileImage);
 
     try {
-      final url = Uri.parse("$userurl/signup");
+      final url = Uri.parse("$userUrl/signup");
       final request = http.MultipartRequest('POST', url);
 
       request.fields['email'] = email;
@@ -159,7 +150,7 @@ class UserAPIService {
     String password,
     TokenService authService,
   ) async {
-    final url = Uri.parse("$userurl/login");
+    final url = Uri.parse("$userUrl/login");
 
     try {
       final response = await http.post(
@@ -189,7 +180,7 @@ class UserAPIService {
     String query,
   ) async {
     try {
-      final url = Uri.parse("$userurl/phone?search_query=$query");
+      final url = Uri.parse("$userUrl/phone?search_query=$query");
 
       final response = await http.get(
         url,
@@ -214,7 +205,7 @@ class UserAPIService {
     TokenService authService,
   ) async {
     try {
-      final url = Uri.parse("$userurl/addphone");
+      final url = Uri.parse("$userUrl/addphone");
 
       final response = await http.patch(
         url,
@@ -242,7 +233,7 @@ class UserAPIService {
   }
 
   Future<List<ParticipantDetails>> getUserDetails(Set<String> userIdList, String token) async{
-    final url= Uri.parse("$userurl/allusers");
+    final url= Uri.parse("$userUrl/allusers");
     try{
       final response= await http.post(
           url,
@@ -276,7 +267,7 @@ class UserAPIService {
 
   Future<bool> logout(String token) async{
     try{
-      final url= Uri.parse("$userurl/logout");
+      final url= Uri.parse("$userUrl/logout");
       final response = await http.post(
         url,
         headers: {'Authorization': 'Bearer $token'},
