@@ -95,93 +95,111 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          "Email",
-                          style: TextStyle(color: constants.cyancolor),
-                        ),
-                        TextFormField(
-                          controller: _email,
-                          keyboardType: TextInputType.text,
-                          style: const TextStyle(
-                            color: constants.cyancolor,
-                            fontSize: 12,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: "Enter your email",
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(18),
-                              borderSide: const BorderSide(color: constants.magentacolor),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(18),
-                              borderSide: const BorderSide(color: constants.magentacolor),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(18),
-                              borderSide: const BorderSide(color: constants.magentacolor),
-                            ),
-                          ),
-                          validator: (value) {
-                            if (value==null || value.isEmpty){
-                              return "Please enter an email";
-                            }
-                            if (!emailRe.hasMatch(value)){
-                              return "Please enter a valid email address";
-                            }
-                            return null;
-                          },
-                        ),
-                        const Text(
-                          "Password",
-                          style: TextStyle(color: constants.cyancolor),
-                        ),
-                        TextFormField(
-                          controller: _password,
-                          keyboardType: TextInputType.text,
-                          obscureText: _obscurePassword,
-                          style: const TextStyle(
-                            color: constants.cyancolor,
-                            fontSize: 12,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: "Enter your password",
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(18),
-                              borderSide: const BorderSide(color: constants.magentacolor),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(18),
-                              borderSide: BorderSide(color: constants.magentacolor),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(18),
-                              borderSide: BorderSide(color: constants.magentacolor),
-                            ),
-                            suffixIcon: IconButton(
-                              onPressed: () {
-                                setState(() {
-                                  _obscurePassword = !_obscurePassword;
-                                });
-                              },
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
-                                color: Colors.grey[600],
+                        Expanded(
+                          flex: 1,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              const Text(
+                                "Email",
+                                style: TextStyle(color: constants.cyancolor),
                               ),
-                            ),
+                              TextFormField(
+                                controller: _email,
+                                keyboardType: TextInputType.text,
+                                style: const TextStyle(
+                                  color: constants.cyancolor,
+                                  fontSize: 12,
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: "Enter your email",
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                    borderSide: const BorderSide(color: constants.magentacolor),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                    borderSide: const BorderSide(color: constants.magentacolor),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                    borderSide: const BorderSide(color: constants.magentacolor),
+                                  ),
+                                ),
+                                validator: (value) {
+                                  if (value==null || value.isEmpty){
+                                    return "Please enter an email";
+                                  }
+                                  if (!emailRe.hasMatch(value)){
+                                    return "Please enter a valid email address";
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ],
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return "Please enter your password";
-                            }
-                            if (value.length < 6) {
-                              return "Password is too short";
-                            }
-                            return null;
-                          },
+                        ),
+                        Expanded(
+                          flex: 1,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              const Text(
+                                "Password",
+                                style: TextStyle(color: constants.cyancolor),
+                              ),
+                              TextFormField(
+                                controller: _password,
+                                keyboardType: TextInputType.text,
+                                obscureText: _obscurePassword,
+                                style: const TextStyle(
+                                  color: constants.cyancolor,
+                                  fontSize: 12,
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: "Enter your password",
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                    borderSide: const BorderSide(color: constants.magentacolor),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                    borderSide: BorderSide(color: constants.magentacolor),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                    borderSide: BorderSide(color: constants.magentacolor),
+                                  ),
+                                  suffixIcon: IconButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        _obscurePassword = !_obscurePassword;
+                                      });
+                                    },
+                                    icon: Icon(
+                                      _obscurePassword
+                                          ? Icons.visibility_off
+                                          : Icons.visibility,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return "Please enter your password";
+                                  }
+                                  if (value.length < 6) {
+                                    return "Password is too short";
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -190,7 +208,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Flexible(
                   flex: 1,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                      children: [
