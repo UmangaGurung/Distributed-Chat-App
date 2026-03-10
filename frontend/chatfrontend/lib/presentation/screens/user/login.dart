@@ -24,7 +24,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   bool _obscurePassword = true;
 
-  final userService= UserAPIService();
+  final userService = UserAPIService();
   late final TokenService authService;
 
   final emailRe = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]{2,}$');
@@ -33,7 +33,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    authService= ref.read(tokenProvider.notifier);
+    authService = ref.read(tokenProvider.notifier);
   }
 
   @override
@@ -89,12 +89,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ],
                   ),
                 ),
-                Flexible(
+                Expanded(
                   flex: 1,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(
@@ -118,22 +117,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   hintText: "Enter your email",
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(18),
-                                    borderSide: const BorderSide(color: constants.magentacolor),
+                                    borderSide: const BorderSide(
+                                      color: constants.magentacolor,
+                                    ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(18),
-                                    borderSide: const BorderSide(color: constants.magentacolor),
+                                    borderSide: const BorderSide(
+                                      color: constants.magentacolor,
+                                    ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(18),
-                                    borderSide: const BorderSide(color: constants.magentacolor),
+                                    borderSide: const BorderSide(
+                                      color: constants.magentacolor,
+                                    ),
                                   ),
                                 ),
                                 validator: (value) {
-                                  if (value==null || value.isEmpty){
+                                  if (value == null || value.isEmpty) {
                                     return "Please enter an email";
                                   }
-                                  if (!emailRe.hasMatch(value)){
+                                  if (!emailRe.hasMatch(value)) {
                                     return "Please enter a valid email address";
                                   }
                                   return null;
@@ -164,15 +169,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   hintText: "Enter your password",
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(18),
-                                    borderSide: const BorderSide(color: constants.magentacolor),
+                                    borderSide: const BorderSide(
+                                      color: constants.magentacolor,
+                                    ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(18),
-                                    borderSide: BorderSide(color: constants.magentacolor),
+                                    borderSide: BorderSide(
+                                      color: constants.magentacolor,
+                                    ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(18),
-                                    borderSide: BorderSide(color: constants.magentacolor),
+                                    borderSide: BorderSide(
+                                      color: constants.magentacolor,
+                                    ),
                                   ),
                                   suffixIcon: IconButton(
                                     onPressed: () {
@@ -208,143 +219,161 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Flexible(
                   flex: 1,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 15,
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                     children: [
-                       SizedBox(
-                         width: double.infinity,
-                         child: ElevatedButton(
-                           onPressed: () async {
-                             if (!_formKey.currentState!.validate()) {
-                               return;
-                             }
-                             bool success;
-                             try {
-                               success = await UserAPIService.userLogin(
-                                   _email.text.trim(),
-                                   _password.text,
-                                   authService
-                               );
-                             } catch (e) {
-                               if (!context.mounted){
-                                 return;
-                               }
-                               ScaffoldMessenger.of(context).showSnackBar(
-                                 SnackBar(
-                                   content: Text("Login failed: $e"),
-                                 ),
-                               );
-                               return;
-                             }
-                             if (success) {
-                               if (!context.mounted){
-                                 return;
-                               }
-                               Navigator.pushAndRemoveUntil(
-                                 context,
-                                 MaterialPageRoute(builder: (context) => Chatscreen()),
-                                     (Route<dynamic> route) => false,
-                               );
-                             }
-                           },
-                           style: ButtonStyle(
-                             backgroundColor: WidgetStatePropertyAll(
-                               constants.magentacolor,
-                             ),
-                             shape: WidgetStatePropertyAll(
-                               RoundedRectangleBorder(
-                                 borderRadius: BorderRadius.circular(18),
-                                 side: BorderSide(
-                                   color: constants.magentacolor,
-                                   width: 2,
-                                 ),
-                               ),
-                             ),
-                           ),
-                           child: const Text(
-                             "Login",
-                             style: TextStyle(
-                               color: constants.cyancolor,
-                               fontSize: 12,
-                             ),
-                           ),
-                         ),
-                       ),
-                       Row(
-                         children: [
-                           Expanded(
-                             child: Divider(
-                               thickness: 1.5,
-                               color: Colors.grey[600],
-                             ),
-                           ),
-                           Padding(
-                             padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                             child: Text(
-                               'or',
-                               style: TextStyle(color: Colors.grey[600]),
-                             ),
-                           ),
-                           Expanded(
-                             child: Divider(
-                               thickness: 1.5,
-                               color: Colors.grey[600],
-                             ),
-                           ),
-                         ],
-                       ),
-                       OutlinedButton.icon(
-                         onPressed: () async {
-                           GoogleRegisterResponse response= await userService.signInWithGoogle(authService);
+                      children: [
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              if (!_formKey.currentState!.validate()) {
+                                return;
+                              }
+                              bool success;
+                              try {
+                                success = await UserAPIService.userLogin(
+                                  _email.text.trim(),
+                                  _password.text,
+                                  authService,
+                                );
+                              } catch (e) {
+                                if (!context.mounted) {
+                                  return;
+                                }
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text("Login failed: $e")),
+                                );
+                                return;
+                              }
+                              if (success) {
+                                if (!context.mounted) {
+                                  return;
+                                }
+                                Navigator.pushAndRemoveUntil(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => Chatscreen(),
+                                  ),
+                                  (Route<dynamic> route) => false,
+                                );
+                              }
+                            },
+                            style: ButtonStyle(
+                              backgroundColor: WidgetStatePropertyAll(
+                                constants.magentacolor,
+                              ),
+                              shape: WidgetStatePropertyAll(
+                                RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                  side: BorderSide(
+                                    color: constants.magentacolor,
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            child: const Text(
+                              "Login",
+                              style: TextStyle(
+                                color: constants.cyancolor,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 5),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Divider(
+                                  thickness: 1.5,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8.0,
+                                ),
+                                child: Text(
+                                  'or',
+                                  style: TextStyle(color: Colors.grey[600]),
+                                ),
+                              ),
+                              Expanded(
+                                child: Divider(
+                                  thickness: 1.5,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: () async {
+                            GoogleRegisterResponse response = await userService
+                                .signInWithGoogle(authService);
 
-                           if (!context.mounted){
-                             return;
-                           }
+                            if (!context.mounted) {
+                              return;
+                            }
 
-                           if (response.loginResult==LoginResult.SUCCESS) {
-                             ScaffoldMessenger.of(context).showSnackBar(
-                               SnackBar(content: Text("SUCCESS")),
-                             );
-                             Navigator.pushAndRemoveUntil(
-                               context,
-                               MaterialPageRoute(builder: (context) => Chatscreen()),
-                                   (Route<dynamic> route) => false,
-                             );
-                           }else if (response.loginResult==LoginResult.INCOMPLETE_PROFILE){
-                             ScaffoldMessenger.of(context).showSnackBar(
-                               SnackBar(content: Text("PLEASE COMPLETE YOUR PROFILE")),
-                             );
-                             Navigator.pushAndRemoveUntil(
-                               context,
-                               MaterialPageRoute(builder: (context) => AddPhoneNumber()),
-                                   (Route<dynamic> route) => false,
-                             );
-                           }else{
-                             ScaffoldMessenger.of(context).showSnackBar(
-                               SnackBar(content: Text("Error. ${response.response}")),
-                             );
-                           }
-                         },
-                         icon: const Icon(
-                           Icons.g_mobiledata,
-                           color: constants.cyancolor,
-                         ),
-                         label: const Text(
-                           'Continue with Google',
-                           style: TextStyle(
-                             fontSize: 12,
-                             color: constants.magentacolor,
-                           ),
-                         ),
-                         style: OutlinedButton.styleFrom(
-                           side: BorderSide(color: Colors.grey[300]!),
-                           shape: RoundedRectangleBorder(
-                             borderRadius: BorderRadius.circular(8),
-                           ),
-                         ),
-                       ),
-                     ],
+                            if (response.loginResult == LoginResult.SUCCESS) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("SUCCESS")),
+                              );
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => Chatscreen(),
+                                ),
+                                (Route<dynamic> route) => false,
+                              );
+                            } else if (response.loginResult ==
+                                LoginResult.INCOMPLETE_PROFILE) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text("PLEASE COMPLETE YOUR PROFILE"),
+                                ),
+                              );
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AddPhoneNumber(),
+                                ),
+                                (Route<dynamic> route) => false,
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text("Error. ${response.response}"),
+                                ),
+                              );
+                            }
+                          },
+                          icon: const Icon(
+                            Icons.g_mobiledata,
+                            color: constants.cyancolor,
+                          ),
+                          label: const Text(
+                            'Continue with Google',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: constants.magentacolor,
+                            ),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: Colors.grey[300]!),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

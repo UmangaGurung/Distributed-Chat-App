@@ -3,12 +3,12 @@ import 'package:chatfrontend/loginresult.dart';
 import 'package:chatfrontend/presentation/providers/tokenprovider.dart';
 import 'package:chatfrontend/presentation/screens/user/addPhoneNumber.dart';
 import 'package:chatfrontend/presentation/screens/user/register2.dart';
+import 'package:chatfrontend/tokenservice.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:chatfrontend/constants.dart' as constants;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../registerresponse.dart';
 import '../../../userapiservice.dart';
 import '../chatscreen.dart';
 
@@ -20,16 +20,24 @@ class RegisterScreen extends ConsumerStatefulWidget {
 }
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
-  final _formkey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
-  final _confirmpassword = TextEditingController();
+  final _confirmPassword = TextEditingController();
 
   bool _obscurePassword = true;
 
   final emailRe = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]{2,}$');
 
-  final userservice = UserAPIService();
+  final userService = UserAPIService();
+  late final TokenService authService;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    authService= ref.read(tokenProvider.notifier);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,355 +51,382 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     return Scaffold(
       backgroundColor: constants.blackcolor,
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formkey,
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(height: 40),
-                  SizedBox(
-                    width: 150,
-                    height: 90,
-                    child: Image.asset(
-                      'assets/icon/logo.png',
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: constants.blackcolor,
-                          child: Icon(
-                            Icons.image,
-                            size: 50,
-                            color: Colors.grey[400],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  SizedBox(
-                    child: Text(
-                      "Register",
-                      style: TextStyle(
-                        color: constants.cyancolor,
-                        fontSize: 22,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 50),
-                  Container(
-                    margin: EdgeInsets.only(left: 25, right: 25),
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "Email",
-                      style: TextStyle(color: constants.cyancolor),
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Container(
-                    margin: EdgeInsets.only(left: 22, right: 22),
-                    alignment: Alignment.centerLeft,
-                    child: TextFormField(
-                      controller: _email,
-                      keyboardType: TextInputType.emailAddress,
-                      style: TextStyle(
-                        color: constants.cyancolor,
-                        fontSize: 12,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: "Enter your email",
-                        hintStyle: TextStyle(fontSize: 12),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          borderSide: BorderSide(color: constants.magentacolor),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          borderSide: BorderSide(color: constants.magentacolor),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          borderSide: BorderSide(color: constants.magentacolor),
-                        ),
-                      ),
-                      validator: (value) {
-                        final v = value?.trim() ?? '';
-                        if (v.isEmpty) {
-                          return "Please enter your email";
-                        }
-                        if (!emailRe.hasMatch(v)) {
-                          return "Please enter a valid email";
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  SizedBox(height: 25),
-                  Container(
-                    margin: EdgeInsets.only(left: 25, right: 25),
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "Password",
-                      style: TextStyle(color: constants.cyancolor),
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Container(
-                    margin: EdgeInsets.only(left: 22, right: 22),
-                    alignment: Alignment.centerLeft,
-                    child: TextFormField(
-                      controller: _password,
-                      keyboardType: TextInputType.visiblePassword,
-                      obscureText: _obscurePassword,
-                      style: TextStyle(
-                        color: constants.cyancolor,
-                        fontSize: 12,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: "Enter your password",
-                        hintStyle: TextStyle(fontSize: 12),
-
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          borderSide: BorderSide(color: constants.magentacolor),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          borderSide: BorderSide(color: constants.magentacolor),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          borderSide: BorderSide(color: constants.magentacolor),
-                        ),
-                        suffixIcon: IconButton(
-                          onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });
-                          },
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "Please enter a password";
-                        }
-                        if (value.length < 6) {
-                          return "Password is too short";
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  SizedBox(height: 25),
-                  Container(
-                    margin: EdgeInsets.only(left: 25, right: 25),
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "Confirm",
-                      style: TextStyle(color: constants.cyancolor),
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Container(
-                    margin: EdgeInsets.only(left: 22, right: 22),
-                    alignment: Alignment.centerLeft,
-                    child: TextFormField(
-                      controller: _confirmpassword,
-                      keyboardType: TextInputType.visiblePassword,
-                      obscureText: _obscurePassword,
-                      style: TextStyle(
-                        color: constants.cyancolor,
-                        fontSize: 12,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: "Confirm your password",
-                        hintStyle: TextStyle(fontSize: 12),
-
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          borderSide: BorderSide(color: constants.magentacolor),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          borderSide: BorderSide(color: constants.magentacolor),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          borderSide: BorderSide(color: constants.magentacolor),
-                        ),
-                        suffixIcon: IconButton(
-                          onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });
-                          },
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "Please re-enter your password";
-                        }
-                        if (value != _password.text) {
-                          return "Passwords do not match";
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  SizedBox(height: 30),
-                  Container(
-                    margin: EdgeInsets.only(left: 22, right: 22),
-                    alignment: Alignment.centerLeft,
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          if (!_formkey.currentState!.validate()) {
-                            return;
-                          } else {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => RegisterContinue(
-                                  email: _email.text.trim(),
-                                  password: _password.text.trim(),
-                                ),
+        child: Form(
+          key: _formKey,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 150,
+                        height: 90,
+                        child: Image.asset(
+                          'assets/icon/logo.png',
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: constants.blackcolor,
+                              child: Icon(
+                                Icons.image,
+                                size: 50,
+                                color: Colors.grey[400],
                               ),
                             );
-                          }
-                        },
-                        style: ButtonStyle(
-                          backgroundColor: WidgetStatePropertyAll(
-                            constants.magentacolor,
-                          ),
-                          shape: WidgetStatePropertyAll(
-                            RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(18),
-                              side: BorderSide(
-                                color: constants.magentacolor,
-                                width: 2,
-                              ),
-                            ),
-                          ),
-                        ),
-                        child: Text(
-                          "Continue",
-                          style: TextStyle(
-                            color: constants.cyancolor,
-                            fontSize: 12,
-                          ),
+                          },
                         ),
                       ),
+                      const Text(
+                        "Register",
+                        style: TextStyle(
+                          color: constants.cyancolor,
+                          fontSize: 22,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  flex: 4,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Flexible(
+                          flex: 1,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "Email",
+                                style: TextStyle(color: constants.cyancolor),
+                              ),
+                              TextFormField(
+                                controller: _email,
+                                keyboardType: TextInputType.emailAddress,
+                                style: const TextStyle(
+                                  color: constants.cyancolor,
+                                  fontSize: 12,
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: "Enter your email",
+                                  hintStyle: const TextStyle(fontSize: 12),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                    borderSide: const BorderSide(
+                                      color: constants.magentacolor,
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                    borderSide: const BorderSide(
+                                      color: constants.magentacolor,
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                    borderSide: const BorderSide(
+                                      color: constants.magentacolor,
+                                    ),
+                                  ),
+                                ),
+                                validator: (value) {
+                                  final v = value?.trim() ?? '';
+                                  if (v.isEmpty) {
+                                    return "Please enter your email";
+                                  }
+                                  if (!emailRe.hasMatch(v)) {
+                                    return "Please enter a valid email";
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        Flexible(
+                          flex: 1,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "Password",
+                                style: TextStyle(color: constants.cyancolor),
+                              ),
+                              TextFormField(
+                                controller: _password,
+                                keyboardType: TextInputType.visiblePassword,
+                                obscureText: _obscurePassword,
+                                style: const TextStyle(
+                                  color: constants.cyancolor,
+                                  fontSize: 12,
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: "Enter your password",
+                                  hintStyle: const TextStyle(fontSize: 12),
+
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                    borderSide: const BorderSide(
+                                      color: constants.magentacolor,
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                    borderSide: const BorderSide(
+                                      color: constants.magentacolor,
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                    borderSide: const BorderSide(
+                                      color: constants.magentacolor,
+                                    ),
+                                  ),
+                                  suffixIcon: IconButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        _obscurePassword = !_obscurePassword;
+                                      });
+                                    },
+                                    icon: Icon(
+                                      _obscurePassword
+                                          ? Icons.visibility_off
+                                          : Icons.visibility,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return "Please enter a password";
+                                  }
+                                  if (value.length < 6) {
+                                    return "Password is too short";
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        Flexible(
+                          flex: 1,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "Confirm",
+                                style: TextStyle(color: constants.cyancolor),
+                              ),
+                              TextFormField(
+                                controller: _confirmPassword,
+                                keyboardType: TextInputType.visiblePassword,
+                                obscureText: _obscurePassword,
+                                style: const TextStyle(
+                                  color: constants.cyancolor,
+                                  fontSize: 12,
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: "Confirm your password",
+                                  hintStyle: const TextStyle(fontSize: 12),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                    borderSide: const BorderSide(
+                                      color: constants.magentacolor,
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                    borderSide: const BorderSide(
+                                      color: constants.magentacolor,
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                    borderSide: const BorderSide(
+                                      color: constants.magentacolor,
+                                    ),
+                                  ),
+                                  suffixIcon: IconButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        _obscurePassword = !_obscurePassword;
+                                      });
+                                    },
+                                    icon: Icon(
+                                      _obscurePassword
+                                          ? Icons.visibility_off
+                                          : Icons.visibility,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return "Please re-enter your password";
+                                  }
+                                  if (value != _password.text) {
+                                    return "Passwords do not match";
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  SizedBox(height: 30),
-                  Center(
-                    child: Row(
+                ),
+                Expanded(
+                  flex: 3,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        Expanded(
-                          child: Padding(
-                            padding: EdgeInsets.only(left: 25),
-                            child: Divider(
-                              thickness: 1.5,
-                              color: Colors.grey[600],
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              if (!_formKey.currentState!.validate()) {
+                                return;
+                              } else {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => RegisterContinue(
+                                      email: _email.text.trim(),
+                                      password: _password.text.trim(),
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                            style: ButtonStyle(
+                              backgroundColor: const WidgetStatePropertyAll(
+                                constants.magentacolor,
+                              ),
+                              shape: WidgetStatePropertyAll(
+                                RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                  side: const BorderSide(
+                                    color: constants.magentacolor,
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            child: const Text(
+                              "Continue",
+                              style: TextStyle(
+                                color: constants.cyancolor,
+                                fontSize: 12,
+                              ),
                             ),
                           ),
                         ),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Text(
-                            'or',
-                            style: TextStyle(color: Colors.grey[600]),
+                          padding: const EdgeInsets.symmetric(horizontal: 5),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Divider(
+                                  thickness: 1.5,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8.0,),
+                                child: Text(
+                                  'or',
+                                  style: TextStyle(color: Colors.grey[600]),
+                                ),
+                              ),
+                              Expanded(
+                                child: Divider(
+                                  thickness: 1.5,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        Expanded(
-                          child: Padding(
-                            padding: EdgeInsets.only(right: 25),
-                            child: Divider(
-                              thickness: 1.5,
-                              color: Colors.grey[600],
+                        OutlinedButton.icon(
+                          onPressed: () async {
+                            GoogleRegisterResponse response = await userService
+                                .signInWithGoogle(authService);
+
+                            if (!context.mounted){
+                              return;
+                            }
+
+                            if (response.loginResult == LoginResult.SUCCESS) {
+                              ScaffoldMessenger.of(
+                                context,
+                              ).showSnackBar(SnackBar(content: Text("SUCCESS")));
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => Chatscreen(),
+                                ),
+                                (Route<dynamic> route) => false,
+                              );
+                            } else if (response.loginResult ==
+                                LoginResult.INCOMPLETE_PROFILE) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text("PLEASE COMPLETE YOUR PROFILE"),
+                                ),
+                              );
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AddPhoneNumber(),
+                                ),
+                                (Route<dynamic> route) => false,
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text("Error. ${response.response}"),
+                                ),
+                              );
+                            }
+                          },
+                          icon: const Icon(
+                            Icons.g_mobiledata,
+                            color: constants.cyancolor,
+                          ),
+                          label: const Text(
+                            'Continue with Google',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: constants.magentacolor,
+                            ),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: Colors.grey[300]!),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
                             ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  SizedBox(height: 30),
-                  Container(
-                    margin: EdgeInsets.only(left: 22, right: 22),
-                    alignment: Alignment.center,
-                    child: OutlinedButton.icon(
-                      onPressed: () async {
-                        final authService = ref.read(tokenProvider.notifier);
-
-                        GoogleRegisterResponse response = await userservice
-                            .signInWithGoogle(authService);
-                        if (response.loginResult == LoginResult.SUCCESS) {
-                          ScaffoldMessenger.of(
-                            context,
-                          ).showSnackBar(SnackBar(content: Text("SUCCESS")));
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => Chatscreen(),
-                            ),
-                            (Route<dynamic> route) => false,
-                          );
-                        } else if (response.loginResult ==
-                            LoginResult.INCOMPLETE_PROFILE) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text("PLEASE COMPLETE YOUR PROFILE"),
-                            ),
-                          );
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => AddPhoneNumber(),
-                            ),
-                            (Route<dynamic> route) => false,
-                          );
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text("Error. ${response.response}"),
-                            ),
-                          );
-                        }
-                      },
-                      icon: Icon(
-                        Icons.g_mobiledata,
-                        color: constants.cyancolor,
-                      ),
-                      label: Text(
-                        'Continue with Google',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: constants.magentacolor,
-                        ),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: Colors.grey[300]!),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
