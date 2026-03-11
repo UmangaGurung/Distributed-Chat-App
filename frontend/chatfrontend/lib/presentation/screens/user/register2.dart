@@ -22,9 +22,9 @@ class RegisterContinue extends StatefulWidget {
 }
 
 class _RegisterContinueState extends State<RegisterContinue> {
-  final _formkey = GlobalKey<FormState>();
-  final _fullname = TextEditingController();
-  final _phonenumber = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  final _fullName = TextEditingController();
+  final _phoneNumber = TextEditingController();
 
   File? _profileImage;
   final ImagePicker _picker = ImagePicker();
@@ -52,229 +52,251 @@ class _RegisterContinueState extends State<RegisterContinue> {
     );
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: constants.blackcolor,
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formkey,
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(height: 100),
-                  Center(
-                    child: GestureDetector(
-                      onTap: _pickImage,
-                      child: Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.grey[300]!,
-                            width: 2,
-                          ),
-                        ),
-                        child: _profileImage != null
-                            ? ClipOval(
-                                child: Image.file(
-                                  _profileImage!,
-                                  fit: BoxFit.cover,
-                                  width: 120,
-                                  height: 120,
-                                ),
-                              )
-                            : Icon(
-                                Icons.camera_alt,
-                                size: 50,
-                                color: Colors.grey[600],
-                              ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 25),
-                  Container(
-                    margin: EdgeInsets.only(left: 25, right: 25),
-                    alignment: Alignment.center,
-                    child: Text(
-                      "Upload Profile Picture",
-                      style: TextStyle(
-                        color: constants.cyancolor,
-                        fontSize: 10,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 50),
-                  Container(
-                    margin: EdgeInsets.only(left: 25, right: 25),
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "Full Name",
-                      style: TextStyle(color: constants.cyancolor),
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Container(
-                    margin: EdgeInsets.only(left: 22, right: 22),
-                    alignment: Alignment.centerLeft,
-                    child: TextFormField(
-                      controller: _fullname,
-                      keyboardType: TextInputType.text,
-                      style: TextStyle(
-                        color: constants.cyancolor,
-                        fontSize: 12,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: "Enter your name",
-                        hintStyle: TextStyle(fontSize: 12),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          borderSide: BorderSide(color: constants.magentacolor),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          borderSide: BorderSide(color: constants.magentacolor),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          borderSide: BorderSide(color: constants.magentacolor),
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "Please enter your name";
-                        } else if (value.length < 4) {
-                          return "Invalid format";
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  SizedBox(height: 25),
-                  Container(
-                    margin: EdgeInsets.only(left: 25, right: 25),
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "Phone",
-                      style: TextStyle(color: constants.cyancolor),
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Container(
-                    margin: EdgeInsets.only(left: 22, right: 22),
-                    alignment: Alignment.centerLeft,
-                    child: TextFormField(
-                      controller: _phonenumber,
-                      keyboardType: TextInputType.text,
-                      style: TextStyle(
-                        color: constants.cyancolor,
-                        fontSize: 12,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: "Enter your phone number",
-                        hintStyle: TextStyle(fontSize: 12),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          borderSide: BorderSide(color: constants.magentacolor),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          borderSide: BorderSide(color: constants.magentacolor),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          borderSide: BorderSide(color: constants.magentacolor),
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "Please enter your phone";
-                        } else if (value.length != 10) {
-                          return "Invalid format";
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  SizedBox(height: 40),
-                  Container(
-                    margin: EdgeInsets.only(left: 22, right: 22),
-                    alignment: Alignment.centerLeft,
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () async {
-                          if (!_formkey.currentState!.validate()) {
-                            return;
-                          }
-                          if (_profileImage == null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("Please select a profile image")),
-                            );
-                            return;
-                          }
-                          RegisterResponse response;
-                          try {
-                            response = await UserAPIService.registerUser(
-                              widget.email,
-                              widget.password,
-                              _fullname.text,
-                              _phonenumber.text,
-                              _profileImage,
-                            );
-                          }catch(e){
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("Registration failed: $e")),
-                            );
-                            return;
-                          }
-                          if (response.status=="ACCOUNT_CREATED_APP") {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("Successful. ${response.response}")),
-                            );
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => LoginScreen(),
-                              ),
-                            );
-                          }else if (response.status=="FAILED"){
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("Error. ${response.response}")),
-                            );
-                          }else{
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("Error. ${response.response}")),
-                            );
-                          }
-                        },
-                        style: ButtonStyle(
-                          backgroundColor: WidgetStatePropertyAll(
-                            constants.magentacolor,
-                          ),
-                          shape: WidgetStatePropertyAll(
-                            RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(18),
-                              side: BorderSide(
-                                color: constants.magentacolor,
+        child: Form(
+          key: _formKey,
+          child: Center(
+            child: Column(
+              children: [
+                Expanded(
+                  flex: 4,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        GestureDetector(
+                          onTap: _pickImage,
+                          child: Container(
+                            width: 120,
+                            height: 120,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[200],
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.grey[300]!,
                                 width: 2,
+                              ),
+                            ),
+                            child: _profileImage != null
+                                ? ClipOval(
+                                    child: Image.file(
+                                      _profileImage!,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  )
+                                : Icon(
+                                    Icons.camera_alt,
+                                    size: 50,
+                                    color: Colors.grey[600],
+                                  ),
+                          ),
+                        ),
+                        const Text(
+                          "Upload Profile Picture",
+                          style: TextStyle(
+                            color: constants.cyancolor,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 3,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      children: [
+                        Expanded(
+                          flex: 1,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "Full Name",
+                                style: TextStyle(color: constants.cyancolor),
+                              ),
+                              TextFormField(
+                                controller: _fullName,
+                                keyboardType: TextInputType.text,
+                                style: const TextStyle(
+                                  color: constants.cyancolor,
+                                  fontSize: 12,
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: "Enter your name",
+                                  hintStyle: const TextStyle(fontSize: 12),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                    borderSide: const BorderSide(color: constants.magentacolor),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                    borderSide: const BorderSide(color: constants.magentacolor),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                    borderSide: const BorderSide(color: constants.magentacolor),
+                                  ),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return "Please enter your name";
+                                  } else if (value.length < 4) {
+                                    return "Invalid format";
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          flex: 1,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "Phone",
+                                style: TextStyle(color: constants.cyancolor),
+                              ),
+                              TextFormField(
+                                controller: _phoneNumber,
+                                keyboardType: TextInputType.text,
+                                style: const TextStyle(
+                                  color: constants.cyancolor,
+                                  fontSize: 12,
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: "Enter your phone number",
+                                  hintStyle: const TextStyle(fontSize: 12),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                    borderSide: const BorderSide(color: constants.magentacolor),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                    borderSide: const BorderSide(color: constants.magentacolor),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                    borderSide: const BorderSide(color: constants.magentacolor),
+                                  ),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return "Please enter your phone";
+                                  } else if (value.length != 10) {
+                                    return "Invalid format";
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 3,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 20, right: 20, bottom: 15),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              if (!_formKey.currentState!.validate()) {
+                                return;
+                              }
+                              if (_profileImage == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text("Please select a profile image")),
+                                );
+                                return;
+                              }
+
+                              RegisterResponse response;
+
+                              try {
+                                response = await UserAPIService.registerUser(
+                                  widget.email,
+                                  widget.password,
+                                  _fullName.text,
+                                  _phoneNumber.text,
+                                  _profileImage,
+                                );
+                              }catch(e){
+                                if (!context.mounted){
+                                  return;
+                                }
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text("Registration failed: $e")),
+                                );
+                                return;
+                              }
+                              if (!context.mounted){
+                                return;
+                              }
+                              if (response.status=="ACCOUNT_CREATED_APP") {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text("Successful. ${response.response}")),
+                                );
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => LoginScreen(),
+                                  ),
+                                );
+                              }else if (response.status=="FAILED"){
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text("Error. ${response.response}")),
+                                );
+                              }else{
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text("Error. ${response.response}")),
+                                );
+                              }
+                            },
+                            style: ButtonStyle(
+                              backgroundColor: WidgetStatePropertyAll(
+                                constants.magentacolor,
+                              ),
+                              shape: WidgetStatePropertyAll(
+                                RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                  side: BorderSide(
+                                    color: constants.magentacolor,
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            child: const Text(
+                              "Sign Up",
+                              style: TextStyle(
+                                color: constants.cyancolor,
+                                fontSize: 12,
                               ),
                             ),
                           ),
                         ),
-                        child: Text(
-                          "Sign Up",
-                          style: TextStyle(
-                            color: constants.cyancolor,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
