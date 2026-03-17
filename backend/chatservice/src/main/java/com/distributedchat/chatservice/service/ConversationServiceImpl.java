@@ -1,5 +1,11 @@
 package com.distributedchat.chatservice.service;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -9,7 +15,9 @@ import java.util.UUID;
 
 import java.util.stream.Collectors;
 
+import org.apache.tika.Tika;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.distributedchat.chatservice.component.MessageEncryption;
 import com.distributedchat.chatservice.component.redis.RedisCaching;
@@ -36,247 +44,299 @@ public class ConversationServiceImpl implements ConversationService {
 	private RedisCaching redisCaching;
 	private MessageEncryption messageEncryption;
 	private RedisNewConversationEventPublisher conversationEventPublisher;
-	
-	public ConversationServiceImpl(
-			ConversationDAO conversationDAO,
-			RedisCaching redisCaching,
-			MessageEncryption messageEncryption,
-			RedisNewConversationEventPublisher conversationEventPublisher) {
-		// TODO Auto-generated constructor stub
-		this.conversationDAO= conversationDAO;
-		this.redisCaching= redisCaching;
-		this.messageEncryption= messageEncryption;
-		this.conversationEventPublisher= conversationEventPublisher;
-	}
-	
-	@Override
-	public ConversationDetailsListDTO createGroupConversation(
-			ConversationGroupDTO conversationdDto, String uid, String userName, String phone, String photo) {
-		// TODO Auto-generated method stub
-		String convoType= conversationdDto.getType();
-		String convoName= conversationdDto.getName();
-		
-		List<UUID> participants= conversationdDto.getParticipants();
 
-		UUID senderId= UUID.fromString(uid);
+	private static final List<String> mimeTypes = List.of("image/jpeg", "image/jpg", "image/png");
+
+	public ConversationServiceImpl(ConversationDAO conversationDAO, RedisCaching redisCaching,
+			MessageEncryption messageEncryption, RedisNewConversationEventPublisher conversationEventPublisher) {
+		// TODO Auto-generated constructor stub
+		this.conversationDAO = conversationDAO;
+		this.redisCaching = redisCaching;
+		this.messageEncryption = messageEncryption;
+		this.conversationEventPublisher = conversationEventPublisher;
+	}
+
+	@Override
+	public ConversationDetailsListDTO createGroupConversation(ConversationGroupDTO conversationdDto, String uid,
+			String userName, String phone, String photo) {
+		// TODO Auto-generated method stub
+		String convoType = conversationdDto.getType();
+		String convoName = conversationdDto.getName();
+
+		List<UUID> participants = conversationdDto.getParticipants();
+
+		UUID senderId = UUID.fromString(uid);
 		participants.add(senderId);
-		
+
 		if (!convoType.equals("GROUP")) {
 			throw new IllegalArgumentException("Goup convo type mismatch");
 		}
 
-		if (conversationdDto.getParticipants().size()==1 
-				&& conversationdDto.getParticipants().contains(senderId)) {
+		if (conversationdDto.getParticipants().size() == 1 && conversationdDto.getParticipants().contains(senderId)) {
 			throw new IllegalArgumentException("Goup convo with same user cant be created");
 		}
-		ConversationResponseDTO conversation= conversationDAO.createGroupConversation(convoType, convoName, participants, senderId);
-		
+		ConversationResponseDTO conversation = conversationDAO.createGroupConversation(convoType, convoName,
+				participants, senderId);
+
 		conversationEventPublisher.publishNewConversation(
 				new ConversationDetailsListDTO(conversation, new UserDetailGrpcDTO(senderId, userName, photo, phone)));
-		
+
 		return new ConversationDetailsListDTO(conversation, null);
 	}
-	
+
 	@Override
-	public ConversationDetailsListDTO createOrFindConversation(
-			CreateOrFindDTO createOrFindDTO, String uid, String userName, String phone, String photo, String token) {
+	public ConversationDetailsListDTO createOrFindConversation(CreateOrFindDTO createOrFindDTO, String uid,
+			String userName, String phone, String photo, String token) {
 		// TODO Auto-generated method stub
-		UUID userId= UUID.fromString(uid);
-		UUID participantId= createOrFindDTO.getParticipantId();
-		String type= createOrFindDTO.getType();
-		
+		UUID userId = UUID.fromString(uid);
+		UUID participantId = createOrFindDTO.getParticipantId();
+		String type = createOrFindDTO.getType();
+
 		if (userId.equals(participantId)) {
 			throw new IllegalArgumentException("No Convo here");
 		}
-		
-		Map<ConversationResponseDTO, Boolean> result= conversationDAO.createOrFindConversation(userId, participantId, type);
 
-		UserDetailGrpcDTO userDetails= redisCaching.cacheUserInfo(participantId, token);
-		
-		ConversationResponseDTO responseDTO= result.keySet().stream().findFirst().get();
-		boolean operationType= result.get(responseDTO);
-		
+		Map<ConversationResponseDTO, Boolean> result = conversationDAO.createOrFindConversation(userId, participantId,
+				type);
+
+		UserDetailGrpcDTO userDetails = redisCaching.cacheUserInfo(participantId, token);
+
+		ConversationResponseDTO responseDTO = result.keySet().stream().findFirst().get();
+		boolean operationType = result.get(responseDTO);
+
 		if (operationType) {
 			responseDTO.setConversationName(userName);
 			conversationEventPublisher.publishNewConversation(
 					new ConversationDetailsListDTO(responseDTO, new UserDetailGrpcDTO(userId, userName, photo, phone)));
 		}
-		
-		String decryptedMessage= messageEncryption.decryptMessage(responseDTO.getLastMessage());
+
+		String decryptedMessage = messageEncryption.decryptMessage(responseDTO.getLastMessage());
 		responseDTO.setConversationName(userDetails.getUserName());
 		responseDTO.setLastMessage(decryptedMessage);
-		
-		ConversationDetailsListDTO conversationDetailsListDTO= 
-				new ConversationDetailsListDTO(responseDTO, userDetails);
-		
+
+		ConversationDetailsListDTO conversationDetailsListDTO = new ConversationDetailsListDTO(responseDTO,
+				userDetails);
+
 		return conversationDetailsListDTO;
 	}
 
 	@Override
 	public List<ConversationDetailsListDTO> getConversation(String uid, String token) {
 		// TODO Auto-generated method stub
-		UUID userId= UUID.fromString(uid);
-		
-		List<ConversationResponseDTO> allConversations= conversationDAO.getConversation(userId);
-		List<ConversationDetailsListDTO> allConvoDetails= new ArrayList<>();
-		
-		List<UUID> userIds= new ArrayList<>();
-		
-		for (ConversationResponseDTO responseDTO: allConversations) {
+		UUID userId = UUID.fromString(uid);
+
+		List<ConversationResponseDTO> allConversations = conversationDAO.getConversation(userId);
+		List<ConversationDetailsListDTO> allConvoDetails = new ArrayList<>();
+
+		List<UUID> userIds = new ArrayList<>();
+
+		for (ConversationResponseDTO responseDTO : allConversations) {
 			if (responseDTO.getType().equals("BINARY")) {
-				userIds.add(responseDTO.getParticipantID()
-						.stream()
-						.filter(id -> !id.equals(userId))
-						.findFirst()
+				userIds.add(responseDTO.getParticipantID().stream().filter(id -> !id.equals(userId)).findFirst()
 						.orElseThrow());
 			}
 		}
-		
-		List<UserDetailGrpcDTO> userDetails= redisCaching.cacheListOfUserInfo(userIds, token);
-		Map<UUID, UserDetailGrpcDTO> mappedUserDetails= new HashMap<>();
-		
-		for (UserDetailGrpcDTO userDto: userDetails) {
+
+		List<UserDetailGrpcDTO> userDetails = redisCaching.cacheListOfUserInfo(userIds, token);
+		Map<UUID, UserDetailGrpcDTO> mappedUserDetails = new HashMap<>();
+
+		for (UserDetailGrpcDTO userDto : userDetails) {
 			mappedUserDetails.put(userDto.getUserId(), userDto);
 		}
-		
-		for (ConversationResponseDTO conversationResponseDTO: allConversations) {
-			if (conversationResponseDTO.getLastMessage()!=null) {
-			 String decryptedText= messageEncryption.decryptMessage(conversationResponseDTO.getLastMessage());
-			 conversationResponseDTO.setLastMessage(decryptedText);
+
+		for (ConversationResponseDTO conversationResponseDTO : allConversations) {
+			if (conversationResponseDTO.getLastMessage() != null) {
+				String decryptedText = messageEncryption.decryptMessage(conversationResponseDTO.getLastMessage());
+				conversationResponseDTO.setLastMessage(decryptedText);
 			}
-			
+
 			if (conversationResponseDTO.getType().equals("BINARY")) {
-				UserDetailGrpcDTO userDetail= mappedUserDetails.get(conversationResponseDTO.getParticipantID()
-						.stream()
-						.filter(id -> !id.equals(userId))
-						.findFirst()
-						.orElseThrow());
-				
+				UserDetailGrpcDTO userDetail = mappedUserDetails.get(conversationResponseDTO.getParticipantID().stream()
+						.filter(id -> !id.equals(userId)).findFirst().orElseThrow());
+
 				conversationResponseDTO.setConversationName(userDetail.getUserName());
-				
-				allConvoDetails.add(
-						new ConversationDetailsListDTO(
-								conversationResponseDTO, 
-								userDetail)
-						);
-				
-			}else if (conversationResponseDTO.getType().equals("GROUP")) {
-				allConvoDetails.add(
-						new ConversationDetailsListDTO(
-								conversationResponseDTO, 
-								null)
-						);
-			}	
+
+				allConvoDetails.add(new ConversationDetailsListDTO(conversationResponseDTO, userDetail));
+
+			} else if (conversationResponseDTO.getType().equals("GROUP")) {
+				allConvoDetails.add(new ConversationDetailsListDTO(conversationResponseDTO, null));
+			}
 		}
-		
-		Comparator<ConversationDetailsListDTO> comparator= Comparator
+
+		Comparator<ConversationDetailsListDTO> comparator = Comparator
 				.comparing(c -> c.getConversationResponseDTO().getUpdatedAt());
-		
+
 		allConvoDetails.sort(comparator.reversed());
-		
+
 		return allConvoDetails;
 	}
-	
+
 	@Override
-	public ConversationResponseDTO editConversationDetails(
-			ConversationUpdateDTO conversationUpdateDTO, 
-			String convoId, 
+	public ConversationResponseDTO editConversationDetails(ConversationUpdateDTO conversationUpdateDTO, String convoId,
 			String uid) {
 		// TODO Auto-generated method stub
-		UUID userId= UUID.fromString(uid);
-		UUID conversationId= UUID.fromString(convoId);
-		String conversationName= conversationUpdateDTO.getConversationName();
-		
+		UUID userId = UUID.fromString(uid);
+		UUID conversationId = UUID.fromString(convoId);
+		String conversationName = conversationUpdateDTO.getConversationName();
+
 		return conversationDAO.editConversationDetails(userId, conversationId, conversationName);
 	}
 
 	@Override
-	public ConversationResponseDTO addParticipants(
-			ConversationUpdateDTO conversationUpdateDTO, 
-			String convoId, 
+	public ConversationResponseDTO addParticipants(ConversationUpdateDTO conversationUpdateDTO, String convoId,
 			String uid) {
 		// TODO Auto-generated method stub
-		UUID userId= UUID.fromString(uid);
-		UUID conversationId= UUID.fromString(convoId);
-		List<UUID> userIds= conversationUpdateDTO.getUserIds();
-		
+		UUID userId = UUID.fromString(uid);
+		UUID conversationId = UUID.fromString(convoId);
+		List<UUID> userIds = conversationUpdateDTO.getUserIds();
+
 		userIds.removeIf(id -> id.equals(userId));
-		
+
 		if (userIds.isEmpty()) {
 			throw new IllegalArgumentException("List is empty");
 		}
-		
+
 		return conversationDAO.addParticipants(userId, conversationId, userIds);
 	}
-	
+
 	@Override
-	public List<ConvoMessageDTO> getAllConversationMessages(
-			String convoIdString, String userIdString, MessagePaginationDTO messagePaginationDTO, String token) {
+	public List<ConvoMessageDTO> getAllConversationMessages(String convoIdString, String userIdString,
+			MessagePaginationDTO messagePaginationDTO, String token) {
 		// TODO Auto-generated method stub
-		UUID convoId= UUID.fromString(convoIdString);
-		UUID userId= UUID.fromString(userIdString);
-		
-		List<MessageResponseDTO> allMessages= conversationDAO.getAllConversationMessages(convoId, userId, messagePaginationDTO);
-		
-		List<UUID> senderIdList= allMessages.stream()
-				.map(m -> m.getSenderId())
-				.distinct()
+		UUID convoId = UUID.fromString(convoIdString);
+		UUID userId = UUID.fromString(userIdString);
+
+		List<MessageResponseDTO> allMessages = conversationDAO.getAllConversationMessages(convoId, userId,
+				messagePaginationDTO);
+
+		List<UUID> senderIdList = allMessages.stream().map(m -> m.getSenderId()).distinct()
 				.collect(Collectors.toList());
-		
-		List<UserDetailGrpcDTO> userDetailsList= redisCaching.cacheListOfUserInfo(senderIdList, token);
-		Map<UUID, UserDetailGrpcDTO> userDetailMap= new HashMap<>();
-		
-		for (UserDetailGrpcDTO grpcDTO: userDetailsList) {
+
+		List<UserDetailGrpcDTO> userDetailsList = redisCaching.cacheListOfUserInfo(senderIdList, token);
+		Map<UUID, UserDetailGrpcDTO> userDetailMap = new HashMap<>();
+
+		for (UserDetailGrpcDTO grpcDTO : userDetailsList) {
 			userDetailMap.put(grpcDTO.getUserId(), grpcDTO);
 		}
 
-		List<ConvoMessageDTO> allMessageDTOs= new ArrayList<>();
-		
-		for (MessageResponseDTO m: allMessages) {
-			UserDetailGrpcDTO userDetails= userDetailMap.get(m.getSenderId());
-			
-			String decryptedMessage= messageEncryption.decryptMessage(m.getMessage());
+		List<ConvoMessageDTO> allMessageDTOs = new ArrayList<>();
+
+		for (MessageResponseDTO m : allMessages) {
+			UserDetailGrpcDTO userDetails = userDetailMap.get(m.getSenderId());
+
+			String decryptedMessage = messageEncryption.decryptMessage(m.getMessage());
 			m.setMessage(decryptedMessage);
-			
-			ConvoMessageDTO messageDTO= new ConvoMessageDTO();
+
+			ConvoMessageDTO messageDTO = new ConvoMessageDTO();
 			messageDTO.setMessageResponse(m);
 			messageDTO.setSenderDetails(userDetails);
-			
+
 			allMessageDTOs.add(messageDTO);
 		}
 		return allMessageDTOs;
 	}
 
 	@Override
-	public List<ConvoMessageDTO> getLatestMessages(String convoId, String userId, LatestMessageDTO latestMessageDTO, String token) {
+	public List<ConvoMessageDTO> getLatestMessages(String convoId, String userId, LatestMessageDTO latestMessageDTO,
+			String token) {
 		// TODO Auto-generated method stub
-		UUID conversationId= UUID.fromString(convoId);
-		UUID uId= UUID.fromString(userId);
-		
-		List<MessageResponseDTO> messageList= conversationDAO.getLatestMessages(conversationId, uId, latestMessageDTO);
-		
+		UUID conversationId = UUID.fromString(convoId);
+		UUID uId = UUID.fromString(userId);
+
+		List<MessageResponseDTO> messageList = conversationDAO.getLatestMessages(conversationId, uId, latestMessageDTO);
+
 		System.out.println(messageList);
-		List<UUID> userIdList= messageList.stream()
-				.map(m -> m.getSenderId())
-				.distinct()
-				.collect(Collectors.toList());
-		
-		List<UserDetailGrpcDTO> userDetails= redisCaching.cacheListOfUserInfo(userIdList, token);
-		Map<UUID, UserDetailGrpcDTO> userDetailMap= new HashMap<>();
-		
-		for (UserDetailGrpcDTO userDetail: userDetails) {
+		List<UUID> userIdList = messageList.stream().map(m -> m.getSenderId()).distinct().collect(Collectors.toList());
+
+		List<UserDetailGrpcDTO> userDetails = redisCaching.cacheListOfUserInfo(userIdList, token);
+		Map<UUID, UserDetailGrpcDTO> userDetailMap = new HashMap<>();
+
+		for (UserDetailGrpcDTO userDetail : userDetails) {
 			userDetailMap.put(userDetail.getUserId(), userDetail);
 		}
-		
-		List<ConvoMessageDTO> result= new ArrayList<>();
-		for (MessageResponseDTO messageResponseDTO: messageList) {
-			String decryptedText= messageEncryption.decryptMessage(messageResponseDTO.getMessage());
+
+		List<ConvoMessageDTO> result = new ArrayList<>();
+		for (MessageResponseDTO messageResponseDTO : messageList) {
+			String decryptedText = messageEncryption.decryptMessage(messageResponseDTO.getMessage());
 			messageResponseDTO.setMessage(decryptedText);
-			
-			UserDetailGrpcDTO userDetail= userDetailMap.get(messageResponseDTO.getSenderId());
-			
+
+			UserDetailGrpcDTO userDetail = userDetailMap.get(messageResponseDTO.getSenderId());
+
 			result.add(new ConvoMessageDTO(messageResponseDTO, userDetail));
 		}
 		return result;
+	}
+
+	@Override
+	public Map<String, String> processMessageImage(String userId, UUID senderUuid, UUID conversationUuid,
+			MultipartFile imageFile) {
+		// TODO Auto-generated method stub
+		String senderId = senderUuid != null ? senderUuid.toString() : "";
+		String conversationId = conversationUuid != null ? conversationUuid.toString() : "";
+
+		if (!userId.equals(senderId) || conversationId.isEmpty() || imageFile == null) {
+			return null;
+		}
+
+		if (imageFile.getSize() > (3 * 1024 * 1024)) {
+			return null;
+		}
+		
+		String imageFullFile;
+		String sanitizedImage;
+
+		Tika tika = new Tika();
+		try (InputStream stream = imageFile.getInputStream()){
+			String mimeType = tika.detect(stream);
+
+			if (mimeTypes.contains(mimeType)) {
+				imageFullFile = imageFile.getOriginalFilename().replaceAll("\\\\", "/");
+				
+				String[] parts = imageFullFile.split("/");
+				String image = parts[parts.length - 1];
+				
+				if (image.contains("\u0000") || image.contains("..") || 
+			            image.startsWith(".") || image.isEmpty() || image.length() > 255) {
+			            throw new SecurityException();
+			        }
+				
+				int extensionIndex= image.lastIndexOf('.');
+				
+				if (extensionIndex==-1 || extensionIndex== image.length()-1) {
+					throw new SecurityException();
+				}
+				
+				sanitizedImage= UUID.randomUUID().toString() + image.substring(extensionIndex);
+			}else {
+				return null;
+			}
+		} catch (Exception e) {
+			// TODO: handle exception
+			return null;
+		}
+
+		String directory = "/var/mnt/data/SpringToolSuite/projects/distributedchat/photos/chat/" + conversationId;
+		Path path = Paths.get(directory);
+
+		if (!Files.exists(path)) {
+			try {
+				Files.createDirectories(path);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
+		Path imagePath = path.resolve(sanitizedImage);
+		try (InputStream stream = imageFile.getInputStream()){
+			Files.copy(stream, imagePath, StandardCopyOption.REPLACE_EXISTING);
+		} catch (IOException e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		}
+		
+		Map<String, String> response= Map.of("imagePath", imagePath.toString());
+		
+		return response;
 	}
 }

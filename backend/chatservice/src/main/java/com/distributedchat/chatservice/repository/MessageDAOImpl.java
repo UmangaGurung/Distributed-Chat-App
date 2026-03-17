@@ -49,7 +49,7 @@ public class MessageDAOImpl implements MessageDAO{
 			
 			Message message= new Message();
 			message.setConversation(conversation);
-			message.setType(messageDTO.getType());
+			message.setType(messageDTO.getType().toString());
 			message.setMessage(messageDTO.getMessage());
 			message.setSenderId(uid);
 			

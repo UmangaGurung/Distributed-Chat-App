@@ -1,6 +1,10 @@
 package com.distributedchat.chatservice.service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import org.springframework.web.multipart.MultipartFile;
 
 import com.distributedchat.chatservice.model.dto.Conversation.ConversationDetailsListDTO;
 import com.distributedchat.chatservice.model.dto.Conversation.ConversationGroupDTO;
@@ -25,4 +29,6 @@ public interface ConversationService {
 	public List<ConvoMessageDTO> getAllConversationMessages(String convoId, String userId, MessagePaginationDTO messagePaginationDTO, String token);
 
 	public List<ConvoMessageDTO> getLatestMessages(String convoId, String userId, LatestMessageDTO latestMessageDTO, String token);
+
+	public Map<String, String> processMessageImage(String userId, UUID senderId, UUID conversationId, MultipartFile imageFile);
 }

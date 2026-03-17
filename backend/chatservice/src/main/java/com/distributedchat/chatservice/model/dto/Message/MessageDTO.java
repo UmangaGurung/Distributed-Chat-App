@@ -5,7 +5,7 @@ import java.util.UUID;
 public class MessageDTO {
 	
 	private UUID conversationId;
-	private String type;
+	private MessageType type;
 	private String message;
 	
 	public MessageDTO() {
@@ -18,10 +18,10 @@ public class MessageDTO {
 	public void setConversationId(UUID conversationId) {
 		this.conversationId = conversationId;
 	}
-	public String getType() {
+	public MessageType getType() {
 		return type;
 	}
-	public void setType(String type) {
+	public void setType(MessageType type) {
 		this.type = type;
 	}
 	public String getMessage() {

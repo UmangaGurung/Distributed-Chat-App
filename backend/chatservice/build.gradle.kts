@@ -48,6 +48,7 @@ dependencies {
 	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
 	implementation("net.devh:grpc-spring-boot-starter:3.1.0.RELEASE")
 	implementation("com.oath.cyclops:cyclops:10.4.1")
+	implementation("org.apache.tika:tika-core:3.2.2")
 }
 
 dependencyManagement {

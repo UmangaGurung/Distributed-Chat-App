@@ -10,8 +10,10 @@ import com.distributedchat.chatservice.component.redis.RedisCaching;
 import com.distributedchat.chatservice.component.redis.RedisEventPublisher;
 import com.distributedchat.chatservice.component.redis.RedisLua;
 import com.distributedchat.chatservice.component.redis.RedisMessagePublisher;
+import com.distributedchat.chatservice.controller.MessageController;
 import com.distributedchat.chatservice.model.dto.Message.MessageDTO;
 import com.distributedchat.chatservice.model.dto.Message.MessageRedisPayloadDTO;
+import com.distributedchat.chatservice.model.dto.Message.MessageType;
 import com.distributedchat.chatservice.model.dto.Message.TypingEventDTO;
 import com.distributedchat.chatservice.repository.MessageDAO;
 
@@ -20,6 +22,8 @@ import jakarta.transaction.Transactional;
 @Service
 @Transactional
 public class MessageServiceImpl implements MessageService{
+
+    private final MessageController messageController;
 	
 	MessageDAO messageDAO;
 	JWTService jwtService;
@@ -37,7 +41,7 @@ public class MessageServiceImpl implements MessageService{
 			MessageEncryption messageEncryption,
 			RedisCaching redisCaching,
 			RedisLua redisLua,
-			RedisEventPublisher redisEventPublisher) {
+			RedisEventPublisher redisEventPublisher, MessageController messageController) {
 		// TODO Auto-generated constructor stub
 		this.messageDAO= messageDAO;
 		this.jwtService= jwtService;
@@ -46,6 +50,7 @@ public class MessageServiceImpl implements MessageService{
 		this.redisCaching= redisCaching;
 		this.redisLua= redisLua;
 		this.redisEventPublisher= redisEventPublisher;
+		this.messageController = messageController;
 	}
 	
 	@Override
@@ -54,13 +59,12 @@ public class MessageServiceImpl implements MessageService{
 		try {
 			UUID uid= UUID.fromString(userId);
 			String plainMessage= messageDTO.getMessage();
-		
-			String cipheredMessage= messageEncryption.encryptMessage(plainMessage);
-			if (cipheredMessage.isEmpty() || cipheredMessage==null) {
-				throw new IllegalArgumentException();
+			
+			if (messageDTO.getType()== MessageType.TEXT || messageDTO.getType()== MessageType.MEDIA_IMAGE) {
+				String cipheredMessage= messageEncryption.encryptMessage(plainMessage);
+				messageDTO.setMessage(cipheredMessage);
 			}
-			messageDTO.setMessage(cipheredMessage);
-		
+			
 			MessageRedisPayloadDTO payloadDTO= messageDAO.saveMessage(messageDTO, uid);
 			
 			messagePublisher.onMessageSuccess(payloadDTO, userId);
